@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<style media="screen" type="text/css">
+		video#bgvid { 
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			min-width: 100%;
+			min-height: 100%;
+			width: auto;
+			height: auto;
+			z-index: -100;
+			-ms-transform: translateX(-50%) translateY(-50%);
+			-moz-transform: translateX(-50%) translateY(-50%);
+			-webkit-transform: translateX(-50%) translateY(-50%);
+			transform: translateX(-50%) translateY(-50%);
+			background-size: cover; 
+		}	
+
+		.center {
+			margin: auto;
+			width: 50%;
+			padding: 50px;
+			text-align: center;
+		}	
+
+	</style>
+</head>
+<body>
+	<video playsinline autoplay muted loop id="bgvid">
+		<source src="static/video/backmovie.mp4" type="video/mp4">
+	</video>
+
+	<div class="center">
+		<a href="https://login.eveonline.com/oauth/authorize/?response_type=code&redirect_uri={{ data['sso']['callback'] }}&client_id={{ data['sso']['clientId'] }}&scope={{ data['sso']['scope'] }}&state={{data['state']}}">
+				<IMG SRC="https://static.eve-apps.com/images/landing/eve_sso.png">
+		</a>
+	</div>
+
+</body>
+</html>

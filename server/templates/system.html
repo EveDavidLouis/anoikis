@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}System{% end %}
+
+{% block content %}
+
+		<div class="container-box">
+			
+			{% if 'name' in data['details'] %}
+				<h1>{{ data['details']['name'] }}</h1>
+				{% for k,v in data['details'].items() %}
+				<li><b>{{ k }} </b> : {{ v }}</li>
+				{% end %}
+
+			{% end %}
+		</div>
+
+		<script id='speech'type="text/javascript">
+			$(document).ready(function(){
+				{% for s in data['speech'] %}responsiveVoice.speak('{{ s }}');{% end %}
+				$('#speech').remove();
+			});
+		</script>
+
+{% end %}

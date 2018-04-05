@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block title %}Market{% end %}
+{% block content %}
+
+	{% try %}
+	<div class="container-box">
+		<h1>MARKET - {{ data['itemName'] }}</h1>
+		<div style="width: 50%; float:left">
+			<h2>Sell</h2>
+			{% for x in data['marketSell'] %}
+					<li>{{ x['price'] }} #  {{ x['volume'] }} @ {{ x['location'] }}</li>
+			{% end %}
+		</div>
+		<div style="width: 50%; float:right">
+			<h2>Buy</h2>
+			{% for x in data['marketBuy'] %}
+					<li>{{ x['price'] }} #  {{ x['volume'] }} @ {{ x['location'] }}</li>
+			{% end %}
+		</div>
+
+	</div>
+	{% except %}
+	{% end %}
+
+{% end %}

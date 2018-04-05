@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block title %}Payload{% end %}
+{% block content %}
+
+<div class="container-box">
+
+	<h1>PAYLOAD</h1>
+
+	<div class="container-box">
+		<h3>Session</h3>
+		{% for k, v in data['session'].items() %}
+			<li><b>{{ k }} </b> : {{ v }}</li>
+		{% end %}
+	</div>
+
+	<div class="container-box">
+		<h3>Time</h3>
+		<li>{{ data['time'] }}</li>
+	</div>
+
+	<div class="container-box">
+		<h3>Inputs</h3>
+		{% for k,v in data['inputs'].items() %}
+			<li><b>{{ k }} </b> : {{ v }}</li>
+		{% end %}
+	</div>
+
+	<div class="container-box">
+		<h3>Url</h3>
+		{% for x in data['path'] %}
+			<li>{{ x }}</li>
+		{% end %}
+	</div>
+
+	<div class="container-box">
+		<h3>Cookies</h3>
+		{% for k,v in data['cookies'].items() %}
+			<li><b>{{ k }} </b> : {{ v }}</li>
+		{% end %}
+	</div>
+	{% if 'request' in data %}
+	<div class="container-box">
+		<h3>Request</h3>
+		{% for k,v in data['request'].items() %}
+			<li><b>{{ k }} </b>: {{ v }}</li>
+		{% end %}
+	</div>
+	{% end %}
+
+
+</div>
+
+{% end %}
