@@ -24,7 +24,7 @@ def GET(webHandler,payload={}):
 		payload = result
 		return {'mode':'json','data':payload}
 
-	if _mode=='csv':
+	elif _mode=='csv':
 		if not isinstance(result,list): result = [result]
 		payload = csv.toCSV(result,['_id','name','systemClass','spaceType','constellation','region','securityStatus','securityClass','connections','staticGroup','statics','effect','mapped','position','shattered'],',')
 		return {'mode':'direct','data':payload}
