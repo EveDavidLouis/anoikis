@@ -35,6 +35,8 @@ class Application(web.Application):
 
 if __name__ == "__main__":
 
+	logger.info(config.server['host'] + ':' + str(config.server['port']))
+
 	#mongodb
 	db = MotorClient(config.mongodb['url'])[config.mongodb['db']]
 
