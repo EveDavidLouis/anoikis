@@ -1,70 +1,61 @@
 import os
-
-from tornado.ioloop import IOLoop , PeriodicCallback
-from tornado.web import Application
-
-from motor import motor_tornado
-
-from server.config import config
-from server.handlers import socket , web , worker
-from server import cron
-from server.utils import tripwire, eve
-
 import logging
+import json
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('app')
 
-class Application(Application):
+from tornado import ioloop , gen , web
+from motor.motor_tornado import MotorClient
+from server import config
+from server.handlers import webHandler, socketHandler, jobHandler, fetchHandler
+
+class Application(web.Application):
 
 	def __init__(self):
 		handlers = [
-			(r"/ws/(.*)", socket.SocketHandler),
-			(r"/ws", socket.SocketHandler),
-			(r"/(.*)", web.MainHandler),
+			(r"/ws/(.*)", socketHandler.SocketHandler),
+			(r"/login", webHandler.LoginHandler),
+			(r"/logout", webHandler.LogoutHandler),
+			(r"/sso", webHandler.SsoHandler),
+			(r"/tripwire", webHandler.TripwireHandler),
+			(r"/market/(.*)", webHandler.MarketHandler),
+			(r"/(.*)", webHandler.MainHandler),
+			(r"", webHandler.MainHandler),
 		]
 		settings = dict(	
-			cookie_secret="not so secret!",
-			template_path=os.path.join(os.path.dirname(__file__), "server/templates"),
-			static_path=os.path.join(os.path.dirname(__file__), "static"),
+			cookie_secret=config.server['secret'],
+			template_path=os.path.join(os.path.dirname(__file__), "templates"),
+			static_path=os.path.join(os.path.dirname(__file__), "docs"),
 			xsrf_cookies=False,
 			debug=False,
-			autoreload=config.server['autoreload']
+			autoreload=True
 		)
 		super(Application, self).__init__(handlers, **settings)
 
 if __name__ == "__main__":
 
-	logger.info('Starting server ' + str(config.server))
+	#mongodb
+	db = MotorClient(config.mongodb['url'])[config.mongodb['db']]
 
-	#mongoDb
-	mongoClient = motor_tornado.MotorClient(config.mongodb['host'], config.mongodb['port'])
-	mongoDb = mongoClient[config.mongodb['db']]
-	workerClient = worker.Worker("ws://"+config.server['host']+":"+str(config.server['port'])+"/ws")
-	solarMap = eve.SolarMap(mongoDb)
-	itemMap = eve.ItemMap(mongoDb)
+	#fetcher
+	fe = fetchHandler.AsyncFetchClient()
 
+	#workers
+	ws = socketHandler.SocketWorker('ws://'+config.server['host']+':'+str(config.server['port'])+'/ws/test')
+	
 	#application
 	app = Application()
-	app.settings['config'] = config
-	
-	app.settings['db'] = mongoDb
-	app.settings['worker'] = workerClient
-
-	app.settings['itemMap'] = itemMap
-	app.settings['solarMap'] = solarMap
-	
+	app.settings['db'] = db
+	app.settings['fe'] = fe
+	app.settings['ws'] = ws
+	app.settings['co'] = config
 	app.listen(config.server['port'],config.server['host'])
-
-	#cron jobs
-	cron_refreshTokens = PeriodicCallback(lambda : cron.esi.refreshTokens(db=app.settings['db'],authorization=config.sso['authorization']),60000)
-	cron_refreshTokens.start()
- 	
-	tripwireChars=[tripwire.Tripwire(tripwireUsername=i['tripwireUsername'],tripwirePassword=i['tripwirePassword'],maskList=i['maskList'])for i in config.tripwire]
-	cron_tripwire = PeriodicCallback(lambda : cron.tripwire.refresh_tripwire(db=app.settings['db'],chars=tripwireChars),60000*15)
-	cron_tripwire.start()
 	
-	#workers
-	IOLoop.instance().run_sync(workerClient.run)
+	#cron
+	#cron_test = ioloop.PeriodicCallback(lambda : jobHandler.test(ws,fe),10000)
+	#cron_test.start()
 
 	#starting IOLoop
-	IOLoop.instance().start()
+	ioloop.IOLoop.instance().run_sync(ws.run)
+	ioloop.IOLoop.instance().start()
