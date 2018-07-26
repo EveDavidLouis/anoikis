@@ -11,6 +11,13 @@ def inputHandler(inputs=None):
 
 	return {k:v[0].decode() for k,v in inputs.items()}
 
+
+class DefaultHandler(web.RequestHandler):
+	@gen.coroutine
+	def get(self,args):
+		
+		return self.redirect('/static/index.html')
+
 class LoginHandler(web.RequestHandler):
 	@gen.coroutine
 	def get(self):

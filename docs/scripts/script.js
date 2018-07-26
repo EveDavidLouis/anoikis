@@ -3,7 +3,7 @@ var connection = '';
 
 function openSocket(){
 
-	var host = 'wss://ws-anoikis.1d35.starter-us-east-1.openshiftapps.com'
+	var host = 'wss://space-anoikis.1d35.starter-us-east-1.openshiftapps.com/ws/1'
 	//var host = 'wss://0.0.0.0/ws'
 
 	connection = new WebSocket(host);
