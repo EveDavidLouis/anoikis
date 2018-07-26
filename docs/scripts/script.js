@@ -3,8 +3,8 @@ var connection = '';
 
 function openSocket(){
 
-	// var host = 'wss://w-space.herokuapp.com/ws/test'
-	var host = 'wss://0.0.0.0/ws/test'
+	var host = 'wss://ws-anoikis.1d35.starter-us-east-1.openshiftapps.com/ws'
+	//var host = 'wss://0.0.0.0/ws'
 
 	connection = new WebSocket(host);
 	
