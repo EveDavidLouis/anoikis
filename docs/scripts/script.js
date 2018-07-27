@@ -1,41 +1,102 @@
-var data = [];
-var connection = '';
+var connection;
 
 function openSocket(){
 
-	var host = 'wss://space-anoikis.1d35.starter-us-east-1.openshiftapps.com/ws/1'
-	//var host = 'wss://0.0.0.0/ws'
+	var host = 'wss://space-anoikis.1d35.starter-us-east-1.openshiftapps.com'
+	if (window.location.hostname == '0.0.0.0' || window.location.hostname == 'localhost'){
+		host = 'ws://'+ window.location.host
+	};
 
-	connection = new WebSocket(host);
+	connection = new WebSocket(host+'/ws/1');
 	
-	var body = $('body');
-
 	connection.onopen = function (event) {
-		body.html('<p>CONNECTION OPEN</p>');
+		$('body').html('<p>CONNECTION OPEN</p>');
 	};
 
 	connection.onclose = function (event) {
-		body.load('templates/offline.html');
-		setTimeout(openSocket, 10000);
+		$('body').html('<p>CONNECTION CLOSE</p>');
+		// body.load('templates/offline.html');
+		setTimeout(openSocket, 2000);
 	};
 
 	connection.onerror = function (event) {
-		body.html('<p>ERROR</p>');
+		$('body').html('<p>ERROR</p>');
 	};
 
 	connection.onmessage = function (event) {
-		
+
 		data = JSON.parse(event.data);
 		update(data);
+
 	};
 }
 
 function update(updateData){
+	
+	console.log(updateData);
+	
+	if ('setCookie' in updateData){
+		setCookie(updateData.setCookie.name,updateData.setCookie.value);
+		window.location = window.location.origin;
+	}
 
-	console.log('update')
+	if ('body' in updateData){
+		$('body').html(updateData.body);
+	}
+
+	if ('login' in updateData){
+		$('body').html('Welcome ' + updateData.login.name);
+	}
+	
+}
+
+function setCookie(name,value,days) {
+	var expires = "";
+	if (days) {
+		var date = new Date();
+		date.setTime(date.getTime() + (days*24*60*60*1000));
+		expires = "; expires=" + date.toUTCString();
+	}
+	document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+function getCookie(name) {
+	var nameEQ = name + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0;i < ca.length;i++) {
+		var c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1,c.length);
+		if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+	}
+	return null;
+}
+function eraseCookie(name) {   
+	document.cookie = name+'=; Max-Age=-99999999;';  
+}
+
+function auth() {
+
+	// var _id = getCookie("_id");
+
+	// if (_id == null) {
+	// 	body.load('./templates/login.html');
+	// }
+	// else {
+	//  	openSocket();
+	// }
+
+	_url = new URL(window.location.href);
+	_code = _url.searchParams.get("code");
+
+	if (_code != null){
+		setCookie('_code',_code)
+	}
+
+	openSocket();
 
 }
 
 $(document).ready(function(){
-	openSocket();
+
+	auth();
+
 });

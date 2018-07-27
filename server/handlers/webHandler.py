@@ -16,7 +16,8 @@ class DefaultHandler(web.RequestHandler):
 	@gen.coroutine
 	def get(self,args):
 		
-		return self.redirect('/static/index.html')
+		self.write(self.render_string('index.html'))
+		self.finish()
 
 class LoginHandler(web.RequestHandler):
 	@gen.coroutine

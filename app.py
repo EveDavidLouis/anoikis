@@ -14,14 +14,19 @@ class Application(web.Application):
 
 	def __init__(self):
 		handlers = [
-			(r"/ws/(.*)", socketHandler.SocketHandler),
-			(r"/(.*)", webHandler.DefaultHandler),
-			(r"", webHandler.DefaultHandler),
+			(r"/images/(.*)"	,web.StaticFileHandler, {"path": "docs/images"}),
+			(r"/templates/(.*)"	,web.StaticFileHandler, {"path": "docs/templates"}),
+			(r"/styles/(.*)"	,web.StaticFileHandler, {"path": "docs/styles"}),
+			(r"/scripts/(.*)"	,web.StaticFileHandler, {"path": "docs/scripts"}),
+			(r"/ws/(.*)"		,socketHandler.SocketHandler),
+			(r"/(.*)"			,webHandler.DefaultHandler),
+			(r""				, webHandler.DefaultHandler),
 		]
 		settings = dict(	
 			cookie_secret=config.server['secret'],
 			template_path=os.path.join(os.path.dirname(__file__), "docs"),
 			static_path=os.path.join(os.path.dirname(__file__), "docs"),
+			static_url_prefix = "/static/",
 			xsrf_cookies=False,
 			debug=False,
 			autoreload=True
