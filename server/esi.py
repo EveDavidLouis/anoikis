@@ -25,7 +25,7 @@ def getMarket(region_id=None,typeId=None):
 		responses = yield fe.asyncMultiFetch(chunk)
 		for response in responses:
 			if response.code == 200:
-					for item in json.loads(response.body):
+					for item in json.loads(response.body.decode()):
 						data.append(item)
 						ids.add(item['location_id'])
 
