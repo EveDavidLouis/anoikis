@@ -21,6 +21,7 @@ class Application(web.Application):
 			(r"/ws/(.*)"		,socketHandler.SocketHandler),
 			(r"/market/(.*)"	,webHandler.MarketHandler),
 			(r"/tripwire"		,webHandler.TripwireHandler),
+			(r"/system/(.*)"	,webHandler.SystemHandler),
 			(r"/(.*)"			,webHandler.DefaultHandler),
 			(r""				, webHandler.DefaultHandler),
 		]

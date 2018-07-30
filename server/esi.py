@@ -29,7 +29,6 @@ def getMarket(region_id=None,typeId=None):
 						data.append(item)
 						ids.add(item['location_id'])
 
-	#body=urllib.parse.urlencode(list(ids))
 	body = json.dumps({'ids':list(ids)})
 	request = {'kwargs':{'method':'POST' , 'body':body } ,'url':'https://esi.evetech.net/legacy/universe/names/'}
 	response = yield fe.asyncFetch(request)
