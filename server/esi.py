@@ -33,7 +33,7 @@ def getMarket(region_id=None,typeId=None):
 	body = json.dumps({'ids':list(ids)})
 	request = {'kwargs':{'method':'POST' , 'body':body } ,'url':'https://esi.evetech.net/legacy/universe/names/'}
 	response = yield fe.asyncFetch(request)
-	locations = { i['id'] : i['name'] for i in json.loads(response.body)}
+	locations = { i['id'] : i['name'] for i in json.loads(response.body.decode())}
 
 	for i in range(len(data)): 
 		data[i]['location_name'] = locations[data[i]['location_id']]
