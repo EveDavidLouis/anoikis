@@ -19,6 +19,8 @@ class Application(web.Application):
 			(r"/styles/(.*)"	,web.StaticFileHandler, {"path": "docs/styles"}),
 			(r"/scripts/(.*)"	,web.StaticFileHandler, {"path": "docs/scripts"}),
 			(r"/ws/(.*)"		,socketHandler.SocketHandler),
+			(r"/market/(.*)"	,webHandler.MarketHandler),
+			(r"/tripwire"		,webHandler.TripwireHandler),
 			(r"/(.*)"			,webHandler.DefaultHandler),
 			(r""				, webHandler.DefaultHandler),
 		]

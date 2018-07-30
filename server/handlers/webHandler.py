@@ -136,7 +136,8 @@ class MarketHandler(web.RequestHandler):
 
 		response = yield esi.getMarket(typeId=args)
 		
-		self.write(self.render_string('market.html',data=response))
+		#self.write(self.render_string('market.html',data=response))
+		self.write(json.dumps(response))
 		self.finish()
 
 class TestMongo(web.RequestHandler):

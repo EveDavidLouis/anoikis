@@ -15,7 +15,6 @@ function openSocket(){
 
 	connection.onclose = function (event) {
 		$('body').html('<p>CONNECTION CLOSE</p>');
-		// body.load('templates/offline.html');
 		setTimeout(openSocket, 2000);
 	};
 
@@ -36,7 +35,12 @@ function update(updateData){
 	console.log(updateData);
 	
 	if ('setCookie' in updateData){
-		setCookie(updateData.setCookie.name,updateData.setCookie.value);
+		setCookie(updateData.setCookie.name,updateData.setCookie.value,7);
+		window.location = window.location.origin;
+	}
+
+	if ('eraseCookie' in updateData){
+		eraseCookie(updateData.eraseCookie.name);
 		window.location = window.location.origin;
 	}
 
@@ -75,20 +79,11 @@ function eraseCookie(name) {
 
 function auth() {
 
-	// var _id = getCookie("_id");
-
-	// if (_id == null) {
-	// 	body.load('./templates/login.html');
-	// }
-	// else {
-	//  	openSocket();
-	// }
-
 	_url = new URL(window.location.href);
 	_code = _url.searchParams.get("code");
 
 	if (_code != null){
-		setCookie('_code',_code)
+		setCookie('_code',_code,7)
 	}
 
 	openSocket();

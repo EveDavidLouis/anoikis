@@ -45,12 +45,13 @@ class SocketHandler(websocket.WebSocketHandler):
 			outbound = {'login': {'id':str(self.id),'name':self.name}}
 
 		elif _code:
-			logger.info('GOT CODE TO VERIFY!!!')
 			_id = yield self.getSSO(_code)
-			logger.info('CODE VERIFIED!!! -->' + _id)
-			outbound={'setCookie':{'name':'_id','value':_id}}
+			if _id != '':
+				outbound={'setCookie':{'name':'_id','value':_id}}
+			else:
+				outbound={'eraseCookie':{'name':'_code'}}
+		
 		else :
-
 			payload = {'sso': self.settings['co'].sso}
 			if not 'state' in payload: payload['state'] = 'home'
 
