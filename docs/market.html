@@ -35,7 +35,11 @@
 	
 
 		<script type="text/javascript">
-		$.getJSON('https://space-anoikis.1d35.starter-us-east-1.openshiftapps.com/market/', function(data) {
+
+		var _url = new URL(window.location.href);
+		var _id = _url.searchParams.get("id") || '';
+
+		$.getJSON('https://space-anoikis.1d35.starter-us-east-1.openshiftapps.com/market/' + _id, function(data) {
 			data = data.sort(function(a,b) {
 					return (a.price > b.price) ? 1 : ((b.price > a.price) ? -1 : 0)
 				} );
@@ -68,7 +72,6 @@
 				.enter()
 				.append('td')
 				.text(function (d) { return d.value; });
-
 
 			console.log(data);
 
