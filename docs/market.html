@@ -10,6 +10,15 @@
 		<link rel="stylesheet" href="styles/styles.css">
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
 		<script type="text/javascript" src="https://d3js.org/d3.v5.min.js"></script>
+		<style type="text/css">
+			td, th {
+				padding: 1px 4px;
+				border:1px solid grey;
+			}
+			table{
+				border:2px solid black;
+			}
+		</style>
 
 	</head>
 
@@ -18,10 +27,42 @@
 
 		<script type="text/javascript">
 		$.getJSON('https://space-anoikis.1d35.starter-us-east-1.openshiftapps.com/market/', function(data) {
-			payload = data.sort(function(a,b) {
+			data = data.sort(function(a,b) {
 					return (a.price > b.price) ? 1 : ((b.price > a.price) ? -1 : 0)
 				} );
-			console.log(payload);
+
+			var table = d3.select('body').append('table')
+			var thead = table.append('thead')
+			var	tbody = table.append('tbody');
+
+			columns = ['location_name','price','volume_remain']
+			// append the header row
+			thead.append('tr')
+				.selectAll('th')
+				.data(columns).enter()
+				.append('th')
+				.text(function (column) { return column; });
+
+			// create a row for each object in the data
+			var rows = tbody.selectAll('tr')
+				.data(data)
+				.enter()
+				.append('tr');
+
+			// create a cell in each row for each column
+			var cells = rows.selectAll('td')
+				.data(function (row) {
+				return columns.map(function (column) {
+					return {column: column, value: row[column]};
+				});
+				})
+				.enter()
+				.append('td')
+				.text(function (d) { return d.value; });
+
+
+			console.log(data);
+
 		});
 
 		</script>
