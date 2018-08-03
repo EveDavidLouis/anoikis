@@ -8,7 +8,7 @@ server = dict(
 	,port 			= int(os.environ.get('SERVER_PORT',8081))
 	,secret 		= os.environ.get('SERVER_SECRET','asecrect')
 )
-if os.environ.get('ANOIKIS_SERVICE_HOST'): server['host'] = int(os.environ.get('ANOIKIS_SERVICE_HOST'))
+if os.environ.get('ANOIKIS_SERVICE_HOST'): server['host'] = os.environ.get('ANOIKIS_SERVICE_HOST')
 if os.environ.get('ANOIKIS_SERVICE_PORT'): server['port'] = int(os.environ.get('ANOIKIS_SERVICE_PORT'))
 
 #mongodb
