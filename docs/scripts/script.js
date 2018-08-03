@@ -2,7 +2,7 @@ var connection;
 
 function openSocket(){
 
-	var host = 'wss://space-anoikis.1d35.starter-us-east-1.openshiftapps.com'
+	var host = 'wss://anoikis-eve-online.7e14.starter-us-west-2.openshiftapps.com'
 	if (window.location.hostname == '0.0.0.0' || window.location.hostname == 'localhost'){
 		host = 'ws://'+ window.location.host
 	};
