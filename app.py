@@ -27,7 +27,7 @@ class Application(web.Application):
 		]
 		settings = dict(	
 			cookie_secret=config.server['secret'],
-			template_path=os.path.join(os.path.dirname(__file__), "server/templates"),
+			template_path=os.path.join(os.path.dirname(__file__), "docs"),
 			static_path=os.path.join(os.path.dirname(__file__), "docs"),
 			static_url_prefix = "/static/",
 			xsrf_cookies=False,
