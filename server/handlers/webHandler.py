@@ -16,7 +16,8 @@ class DefaultHandler(web.RequestHandler):
 	@gen.coroutine
 	def get(self,args):
 		
-		return self.redirect('/static/index.html')
+		self.write(self.render_string('index.html'))
+		self.finish()
 
 class LoginHandler(web.RequestHandler):
 	@gen.coroutine
@@ -128,6 +129,13 @@ class MainHandler(web.RequestHandler):
 			self.redirect('/login')
 
 class MarketHandler(web.RequestHandler):
+
+	@gen.coroutine
+	def set_default_headers(self):
+		self.set_header("Access-Control-Allow-Origin", "*")
+		self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+		self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+
 	@gen.coroutine
 	def get(self,args):
 		
@@ -135,7 +143,8 @@ class MarketHandler(web.RequestHandler):
 
 		response = yield esi.getMarket(typeId=args)
 		
-		self.write(self.render_string('market.html',data=response))
+		#self.write(self.render_string('market.html',data=response))
+		self.write(json.dumps(response))
 		self.finish()
 
 class SystemHandler(web.RequestHandler):
@@ -143,12 +152,17 @@ class SystemHandler(web.RequestHandler):
 	def get(self,args):
 
 		collection = self.settings['db']['systems']
+<<<<<<< HEAD
 		cursor =  collection.find({})
 		document = yield cursor.to_list(length=10000)
 
 		payload = json.dumps(document)
+=======
+		cursor = collection.find({})
+		document = yield cursor.to_list(length=10000)
+>>>>>>> origin/master
 
-		self.write(payload)
+		self.write(json.dumps(document))
 		self.finish()	
 
 class TestFetch(web.RequestHandler):

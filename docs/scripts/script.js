@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 var body;
+=======
+>>>>>>> origin/master
 var connection;
 
 function openSocket(){
@@ -11,17 +14,21 @@ function openSocket(){
 	connection = new WebSocket(host+'/ws/1');
 	
 	connection.onopen = function (event) {
-		body.html('<p>CONNECTION OPEN</p>');
+		$('body').html('<p>CONNECTION OPEN</p>');
 	};
 
 	connection.onclose = function (event) {
+<<<<<<< HEAD
 		body.html('<p>CONNECTION CLOSE</p>');
 		// body.load('templates/offline.html');
+=======
+		$('body').html('<p>CONNECTION CLOSE</p>');
+>>>>>>> origin/master
 		setTimeout(openSocket, 2000);
 	};
 
 	connection.onerror = function (event) {
-		body.html('<p>ERROR</p>');
+		$('body').html('<p>ERROR</p>');
 	};
 
 	connection.onmessage = function (event) {
@@ -35,6 +42,7 @@ function openSocket(){
 function update(updateData){
 	
 	console.log(updateData);
+<<<<<<< HEAD
 
 	if ('body' in updateData){
 		body.html(updateData.body);
@@ -75,12 +83,73 @@ function auth() {
 	// }
 
 	openSocket();
+=======
+	
+	if ('setCookie' in updateData){
+		setCookie(updateData.setCookie.name,updateData.setCookie.value,7);
+		window.location = window.location.origin;
+	}
+
+	if ('eraseCookie' in updateData){
+		eraseCookie(updateData.eraseCookie.name);
+		window.location = window.location.origin;
+	}
+>>>>>>> origin/master
+
+	if ('body' in updateData){
+		$('body').html(updateData.body);
+	}
+
+	if ('login' in updateData){
+		$('body').html('Welcome ' + updateData.login.name);
+	}
+	
+}
+
+<<<<<<< HEAD
+$(document).ready(function(){
+	
+	body = $('body');
+=======
+function setCookie(name,value,days) {
+	var expires = "";
+	if (days) {
+		var date = new Date();
+		date.setTime(date.getTime() + (days*24*60*60*1000));
+		expires = "; expires=" + date.toUTCString();
+	}
+	document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+function getCookie(name) {
+	var nameEQ = name + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0;i < ca.length;i++) {
+		var c = ca[i];
+		while (c.charAt(0)==' ') c = c.substring(1,c.length);
+		if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+	}
+	return null;
+}
+function eraseCookie(name) {   
+	document.cookie = name+'=; Max-Age=-99999999;';  
+}
+
+function auth() {
+
+	_url = new URL(window.location.href);
+	_code = _url.searchParams.get("code");
+
+	if (_code != null){
+		setCookie('_code',_code,7)
+	}
+
+	openSocket();
 
 }
 
 $(document).ready(function(){
-	
-	body = $('body');
+
+>>>>>>> origin/master
 	auth();
 
 });

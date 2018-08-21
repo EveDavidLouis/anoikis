@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>ANOIKIS|OPENSHIFT</title>
+		<title>ANOIKIS</title>
+
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="styles/styles.css">
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+		<script type="text/javascript" src="https://d3js.org/d3.v5.min.js"></script>
+		<style type="text/css">
+
+			td, th{
+				padding: 10px;
+			}
+
+			tr{
+				border-bottom: 1px solid grey;
+			}
+
+			th{
+				background-color: darkgrey;
+			}
+
+			tr:nth-of-type(even) td{
+				background-color: lightgrey;
+			}
+		</style>
+
+	</head>
+
+	<body>
+	
+		<img style="-webkit-user-select: none;" src="https://i.giphy.com/media/tXL4FHPSnVJ0A/giphy.webp">
+		
+		<script type="text/javascript">
+
+		var _url = new URL(window.location.href);
+		var _id = _url.searchParams.get("id") || '';
+
+		$.getJSON('https://anoikis-eve-online.7e14.starter-us-west-2.openshiftapps.com/market/' + _id, function(data) {
+			data = data.sort(function(a,b) {
+					return (a.price > b.price) ? 1 : ((b.price > a.price) ? -1 : 0)
+				} );
+
+			var table = d3.select('body').append('table')
+			var thead = table.append('thead')
+			var	tbody = table.append('tbody');
+
+			columns = ['location_name','price','volume_remain']
+			// append the header row
+			thead.append('tr')
+				.selectAll('th')
+				.data(columns).enter()
+				.append('th')
+				.text(function (column) { return column; });
+
+			// create a row for each object in the data
+			var rows = tbody.selectAll('tr')
+				.data(data)
+				.enter()
+				.append('tr');
+
+			// create a cell in each row for each column
+			var cells = rows.selectAll('td')
+				.data(function (row) {
+				return columns.map(function (column) {
+					return {column: column, value: row[column]};
+				});
+				})
+				.enter()
+				.append('td')
+				.text(function (d) { return d.value; });
+
+			console.log(data);
+
+		});
+
+		</script>
+
+	</body>
+
+</html>
+

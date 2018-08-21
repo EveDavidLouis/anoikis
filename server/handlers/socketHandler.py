@@ -26,10 +26,20 @@ class SocketHandler(websocket.WebSocketHandler):
 		self.id = uuid.uuid4()
 		self.channel = str(channel)
 
+<<<<<<< HEAD
 		cookie = self.get_secure_cookie('_id')
 	   
 		if cookie : 
 			self.refresh_token = cookie.decode('UTF-8')
+=======
+		_id = self.get_cookie('_id')
+		_code = self.get_cookie('_code')
+		
+		logger.warning(_id)
+
+		if _id : 
+			self.refresh_token = _id #.decode('UTF-8')
+>>>>>>> origin/master
 			logger.info('LOGIN:'+ self.refresh_token)
 			document = yield db.pilots.find_one({'refresh_token':self.refresh_token},{'CharacterName':1,'access_token':1}) 	
 	
@@ -37,6 +47,7 @@ class SocketHandler(websocket.WebSocketHandler):
 				self.name = document['CharacterName']
 				self.access_token = document['access_token']
 			else:
+<<<<<<< HEAD
 				self.name = str(self.token)
 		
 			
@@ -49,6 +60,25 @@ class SocketHandler(websocket.WebSocketHandler):
 
 			outbound = {'body': self.render_string('login.html',data=payload).decode("utf-8") }
 
+=======
+				self.name = str(self.refresh_token)
+		
+			outbound = {'login': {'id':str(self.id),'name':self.name}}
+
+		elif _code:
+			_id = yield self.getSSO(_code)
+			if _id != '':
+				outbound={'setCookie':{'name':'_id','value':_id}}
+			else:
+				outbound={'eraseCookie':{'name':'_code'}}
+		
+		else :
+			payload = {'sso': self.settings['co'].sso}
+			if not 'state' in payload: payload['state'] = 'home'
+
+			outbound = {'body': self.render_string('login.html',data=payload).decode("utf-8") }
+
+>>>>>>> origin/master
 		SocketHandler.waiters.add(self)
 		
 		self.write_message(json.dumps(outbound))
@@ -70,7 +100,9 @@ class SocketHandler(websocket.WebSocketHandler):
 		outbound['channel'] = str(self.channel)
 		outbound['inbound'] = inbound
 
-		if 'a' in inbound:
+		if 'c' in inbound:
+			self.name = inbound['a']
+		elif 'a' in inbound:
 			self.name = inbound['a']
 		elif 'w' in inbound:
 
@@ -105,6 +137,47 @@ class SocketHandler(websocket.WebSocketHandler):
 					waiter.write_message(outbound)
 				except:
 					logging.error("Error sending message")
+
+	@gen.coroutine
+	def getSSO(self,code=None):
+		
+		db = self.settings['db']
+		fe = self.settings['fe']
+		co = self.settings['co']
+
+		headers = {}
+		headers['Authorization'] = co.sso['authorization']
+		headers['Content-Type'] = 'application/x-www-form-urlencoded'
+		headers['Host'] = 'login.eveonline.com'
+		
+		payload = {}
+		payload['grant_type'] = 'authorization_code'
+		payload['code'] = code
+
+		url = 'https://login.eveonline.com/oauth/token/'
+
+		body=urllib.parse.urlencode(payload)
+
+		chunk = { 'kwargs':{'method':'POST' , 'body':body , 'headers':headers } , 'url':url }
+		response = yield fe.asyncFetch(chunk)
+		if response.code == 200:
+			
+			oAuth = json.loads(response.body.decode())
+
+			url = 'https://login.eveonline.com/oauth/verify'
+
+			headers['Authorization'] = 'Bearer ' + oAuth['access_token']
+			headers['Host'] = 'login.eveonline.com'
+
+			chunk = { 'kwargs':{'method':'GET', 'headers':headers } , 'url':url }
+			response = yield fe.asyncFetch(chunk)
+			if response.code == 200:
+
+				oAuth.update(json.loads(response.body.decode()))
+				result = yield db.pilots.update_one({'_id':oAuth['CharacterID']},{'$set':oAuth},upsert=True)
+
+				return oAuth['refresh_token']
+
 
 class SocketWorker():
 
