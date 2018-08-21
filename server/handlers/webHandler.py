@@ -138,15 +138,15 @@ class MarketHandler(web.RequestHandler):
 		self.write(self.render_string('market.html',data=response))
 		self.finish()
 
-class TestMongo(web.RequestHandler):
+class SystemHandler(web.RequestHandler):
 	@gen.coroutine
 	def get(self,args):
 
 		collection = self.settings['db']['systems']
-		document = yield collection.find_one({})
+		cursor =  collection.find({})
+		document = yield cursor.to_list(length=10000)
 
-		payload = {}
-		payload['document'] = document
+		payload = json.dumps(document)
 
 		self.write(payload)
 		self.finish()	

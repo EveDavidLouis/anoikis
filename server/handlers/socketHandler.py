@@ -27,9 +27,10 @@ class SocketHandler(websocket.WebSocketHandler):
 		self.channel = str(channel)
 
 		cookie = self.get_secure_cookie('_id')
-	
+	   
 		if cookie : 
 			self.refresh_token = cookie.decode('UTF-8')
+			logger.info('LOGIN:'+ self.refresh_token)
 			document = yield db.pilots.find_one({'refresh_token':self.refresh_token},{'CharacterName':1,'access_token':1}) 	
 	
 			if document and 'CharacterName' in document: 
@@ -37,29 +38,25 @@ class SocketHandler(websocket.WebSocketHandler):
 				self.access_token = document['access_token']
 			else:
 				self.name = str(self.token)
-		else : 
-			self.name = str(self.id)
-
-		logger.info('LOGIN:'+ self.name)
 		
+			
+			outbound = {'login': {'id':str(self.id),'name':self.name}}
+
+		else :
+
+			payload = {'sso': self.settings['co'].sso}
+			if not 'state' in payload: payload['state'] = 'home'
+
+			outbound = {'body': self.render_string('login.html',data=payload).decode("utf-8") }
+
 		SocketHandler.waiters.add(self)
-
-		outbound = {'inbound':[ {'id':str(w.id),'name':w.name} for w in self.waiters]}
-		outbound = json.dumps(outbound)
 		
-		for waiter in self.waiters:
-			waiter.write_message(outbound)
+		self.write_message(json.dumps(outbound))
 
 	@gen.coroutine
 	def on_close(self):
-		logger.info('LOGIN:'+self.name)
-		SocketHandler.waiters.remove(self)
 
-		outbound = {'inbound':[ {'id':str(w.id),'name':w.name} for w in self.waiters]}
-		outbound = json.dumps(outbound)
-		
-		for waiter in self.waiters:
-			waiter.write_message(outbound)
+		SocketHandler.waiters.remove(self)
 
 	@gen.coroutine
 	def on_message(self,inbound={}):
@@ -70,7 +67,6 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		outbound={}
 		outbound['id'] = str(self.id)
-		outbound['name'] = str(self.name)
 		outbound['channel'] = str(self.channel)
 		outbound['inbound'] = inbound
 

@@ -15,12 +15,13 @@ class Application(web.Application):
 	def __init__(self):
 		handlers = [
 			(r"/ws/(.*)", socketHandler.SocketHandler),
+			(r"/system/(.*)", webHandler.SystemHandler),
 			(r"/(.*)", webHandler.DefaultHandler),
 			(r"", webHandler.DefaultHandler),
 		]
 		settings = dict(	
 			cookie_secret=config.server['secret'],
-			template_path=os.path.join(os.path.dirname(__file__), "docs"),
+			template_path=os.path.join(os.path.dirname(__file__), "server/templates"),
 			static_path=os.path.join(os.path.dirname(__file__), "docs"),
 			xsrf_cookies=False,
 			debug=False,
