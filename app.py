@@ -14,12 +14,6 @@ class Application(web.Application):
 
 	def __init__(self):
 		handlers = [
-<<<<<<< HEAD
-			(r"/ws/(.*)", socketHandler.SocketHandler),
-			(r"/system/(.*)", webHandler.SystemHandler),
-			(r"/(.*)", webHandler.DefaultHandler),
-			(r"", webHandler.DefaultHandler),
-=======
 			(r"/images/(.*)"	,web.StaticFileHandler, {"path": "docs/images"}),
 			(r"/templates/(.*)"	,web.StaticFileHandler, {"path": "docs/templates"}),
 			(r"/styles/(.*)"	,web.StaticFileHandler, {"path": "docs/styles"}),
@@ -30,7 +24,6 @@ class Application(web.Application):
 			(r"/system/(.*)"	,webHandler.SystemHandler),
 			(r"/(.*)"			,webHandler.DefaultHandler),
 			(r""				, webHandler.DefaultHandler),
->>>>>>> origin/master
 		]
 		settings = dict(	
 			cookie_secret=config.server['secret'],

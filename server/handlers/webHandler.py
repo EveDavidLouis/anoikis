@@ -152,15 +152,8 @@ class SystemHandler(web.RequestHandler):
 	def get(self,args):
 
 		collection = self.settings['db']['systems']
-<<<<<<< HEAD
-		cursor =  collection.find({})
-		document = yield cursor.to_list(length=10000)
-
-		payload = json.dumps(document)
-=======
 		cursor = collection.find({})
 		document = yield cursor.to_list(length=10000)
->>>>>>> origin/master
 
 		self.write(json.dumps(document))
 		self.finish()	

@@ -26,12 +26,6 @@ class SocketHandler(websocket.WebSocketHandler):
 		self.id = uuid.uuid4()
 		self.channel = str(channel)
 
-<<<<<<< HEAD
-		cookie = self.get_secure_cookie('_id')
-	   
-		if cookie : 
-			self.refresh_token = cookie.decode('UTF-8')
-=======
 		_id = self.get_cookie('_id')
 		_code = self.get_cookie('_code')
 		
@@ -39,7 +33,7 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		if _id : 
 			self.refresh_token = _id #.decode('UTF-8')
->>>>>>> origin/master
+
 			logger.info('LOGIN:'+ self.refresh_token)
 			document = yield db.pilots.find_one({'refresh_token':self.refresh_token},{'CharacterName':1,'access_token':1}) 	
 	
@@ -47,20 +41,7 @@ class SocketHandler(websocket.WebSocketHandler):
 				self.name = document['CharacterName']
 				self.access_token = document['access_token']
 			else:
-<<<<<<< HEAD
-				self.name = str(self.token)
-		
-			
-			outbound = {'login': {'id':str(self.id),'name':self.name}}
 
-		else :
-
-			payload = {'sso': self.settings['co'].sso}
-			if not 'state' in payload: payload['state'] = 'home'
-
-			outbound = {'body': self.render_string('login.html',data=payload).decode("utf-8") }
-
-=======
 				self.name = str(self.refresh_token)
 		
 			outbound = {'login': {'id':str(self.id),'name':self.name}}
@@ -78,7 +59,6 @@ class SocketHandler(websocket.WebSocketHandler):
 
 			outbound = {'body': self.render_string('login.html',data=payload).decode("utf-8") }
 
->>>>>>> origin/master
 		SocketHandler.waiters.add(self)
 		
 		self.write_message(json.dumps(outbound))
