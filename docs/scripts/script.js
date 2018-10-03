@@ -39,7 +39,7 @@ function openSocket(session = 0){
 
 function update(updateData){
 	
-	// console.log(updateData);
+	console.log(updateData);
 	
 	if ('setCookie' in updateData){
 		setCookie(updateData.setCookie.name,updateData.setCookie.value,7);

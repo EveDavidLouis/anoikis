@@ -66,8 +66,8 @@ class SocketHandler(websocket.WebSocketHandler):
 			_id = yield self.getSSO(inbound['code'])
 			if _id != '':
 				outbound={'setCookie':{'name':'_id','value':_id}}
-			else:
-				outbound={'eraseCookie':{'name':'_id'}}
+			# else:
+			# 	outbound={'eraseCookie':{'name':'_id'}}
 
 			self.write_message(json.dumps(outbound))
 
