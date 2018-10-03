@@ -67,7 +67,7 @@ class SocketHandler(websocket.WebSocketHandler):
 			if _id != '':
 				outbound={'setCookie':{'name':'_id','value':_id}}
 			else:
-				outbound={'eraseCookie':{'name':'_code'}}
+				outbound={'eraseCookie':{'name':'_id'}}
 
 			self.write_message(json.dumps(outbound))
 

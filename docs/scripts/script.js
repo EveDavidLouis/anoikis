@@ -42,26 +42,20 @@ function update(updateData){
 	// console.log(updateData);
 	
 	if ('setCookie' in updateData){
-		console.log('SETTING COOKIE FROM SOCKET')
 		setCookie(updateData.setCookie.name,updateData.setCookie.value,7);
 		window.location = window.location.origin;
 	}
 
 	if ('eraseCookie' in updateData){
-		console.log('DELETE COOKIE FROM SOCKET')
 		eraseCookie(updateData.eraseCookie.name);
 		window.location = window.location.origin;
 	}
 
 	if ('login' in updateData){
-		console.log('DISPLAY LOGIN SCREEN FROM SOCKET')
 		$('body').html(updateData.login);
 	}
 
 	if ('welcome' in updateData){
-		console.log('DISPLAY WELCOME SCREEN FROM SOCKET')
-		eraseCookie('_code')
-		eraseCookie('_id')
 		$('body').html('Welcome ' + updateData.welcome.name);
 	}
 	
