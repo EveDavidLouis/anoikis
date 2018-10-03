@@ -26,7 +26,7 @@ class SocketHandler(websocket.WebSocketHandler):
 		self.id = uuid.uuid4()
 		self.channel = str(channel)
 
-		if self.request.protocol = 'http':
+		if self.request.protocol == 'http':
 			_id = self.get_cookie('_id') 
 			_code = self.get_cookie('_code')
 		else :
