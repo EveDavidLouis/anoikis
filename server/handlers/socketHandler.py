@@ -28,10 +28,12 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		_id = self.get_cookie('_id') 
 		if _id == None: _id = self.get_secure_cookie('_id') 
-		
+
 		_code = self.get_cookie('_code') 
 		if _code == None: _code = self.get_secure_cookie('_code') 
 
+		logger.info(self.get_secure_cookie('_code'))
+		
 		if _id : 
 			self.refresh_token = _id #.decode('UTF-8')
 
