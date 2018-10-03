@@ -26,10 +26,12 @@ class SocketHandler(websocket.WebSocketHandler):
 		self.id = uuid.uuid4()
 		self.channel = str(channel)
 
-		_id = self.get_cookie('_id')
-		_code = self.get_cookie('_code')
-		
-		logger.warning(_id)
+		if self.request.protocol = 'http':
+			_id = self.get_cookie('_id') 
+			_code = self.get_cookie('_code')
+		else :
+			_id = self.get_secure_cookie('_id') 
+			_code = self.get_secure_cookie('_code')
 
 		if _id : 
 			self.refresh_token = _id #.decode('UTF-8')
