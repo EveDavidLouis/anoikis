@@ -44,7 +44,7 @@ class SocketHandler(websocket.WebSocketHandler):
 
 				self.name = str(self.refresh_token)
 		
-			outbound = {'login': {'id':str(self.id),'name':self.name}}
+			outbound = {'welcome': {'id':str(self.id),'name':self.name}}
 
 		elif _code:
 			_id = yield self.getSSO(_code)
@@ -57,7 +57,7 @@ class SocketHandler(websocket.WebSocketHandler):
 			payload = {'sso': self.settings['co'].sso}
 			if not 'state' in payload: payload['state'] = 'home'
 
-			outbound = {'body': self.render_string('login.html',data=payload).decode("utf-8") }
+			outbound = {'login': self.render_string('login.html',data=payload).decode("utf-8") }
 
 		SocketHandler.waiters.add(self)
 		

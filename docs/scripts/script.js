@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-var body;
-=======
->>>>>>> origin/master
 var connection;
 
 function openSocket(){
@@ -18,12 +14,8 @@ function openSocket(){
 	};
 
 	connection.onclose = function (event) {
-<<<<<<< HEAD
-		body.html('<p>CONNECTION CLOSE</p>');
-		// body.load('templates/offline.html');
-=======
+
 		$('body').html('<p>CONNECTION CLOSE</p>');
->>>>>>> origin/master
 		setTimeout(openSocket, 2000);
 	};
 
@@ -41,76 +33,35 @@ function openSocket(){
 
 function update(updateData){
 	
-	console.log(updateData);
-<<<<<<< HEAD
-
-	if ('body' in updateData){
-		body.html(updateData.body);
-	}
-	
-}
-
-function getCookie(name) {
-    var dc = document.cookie;
-    var prefix = name + "=";
-    var begin = dc.indexOf("; " + prefix);
-    if (begin == -1) {
-        begin = dc.indexOf(prefix);
-        if (begin != 0) return null;
-    }
-    else
-    {
-        begin += 2;
-        var end = document.cookie.indexOf(";", begin);
-        if (end == -1) {
-        end = dc.length;
-        }
-    }
-    // because unescape has been deprecated, replaced with decodeURI
-    //return unescape(dc.substring(begin + prefix.length, end));
-    return decodeURI(dc.substring(begin + prefix.length, end));
-} 
-
-function auth() {
-
-	// var _id = getCookie("_id");
-
-	// if (_id == null) {
-	// 	body.load('./templates/login.html');
-	// }
-	// else {
-	//  	openSocket();
-	// }
-
-	openSocket();
-=======
+	// console.log(updateData);
 	
 	if ('setCookie' in updateData){
+		console.log('SETTING COOKIE FROM SOCKET')
 		setCookie(updateData.setCookie.name,updateData.setCookie.value,7);
 		window.location = window.location.origin;
 	}
 
 	if ('eraseCookie' in updateData){
+		console.log('DELETE COOKIE FROM SOCKET')
 		eraseCookie(updateData.eraseCookie.name);
 		window.location = window.location.origin;
 	}
->>>>>>> origin/master
-
-	if ('body' in updateData){
-		$('body').html(updateData.body);
-	}
 
 	if ('login' in updateData){
-		$('body').html('Welcome ' + updateData.login.name);
+		console.log('DISPLAY LOGIN SCREEN FROM SOCKET')
+		$('body').html(updateData.login);
+	}
+
+	if ('welcome' in updateData){
+		console.log('DISPLAY WELCOME SCREEN FROM SOCKET')
+		eraseCookie('_code')
+		eraseCookie('_id')
+		$('body').html('Welcome ' + updateData.welcome.name);
 	}
 	
 }
 
-<<<<<<< HEAD
-$(document).ready(function(){
-	
-	body = $('body');
-=======
+
 function setCookie(name,value,days) {
 	var expires = "";
 	if (days) {
@@ -140,16 +91,17 @@ function auth() {
 	_code = _url.searchParams.get("code");
 
 	if (_code != null){
-		setCookie('_code',_code,7)
+		console.log('SETTING CODE COOKIE FROM URL')
+		setCookie('_code',_code,7)	
 	}
 
+	console.log('OPENING SOCKET')
 	openSocket();
 
 }
 
 $(document).ready(function(){
 
->>>>>>> origin/master
 	auth();
 
 });
