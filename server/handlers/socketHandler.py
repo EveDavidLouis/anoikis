@@ -24,6 +24,7 @@ class SocketHandler(websocket.WebSocketHandler):
 		db = self.settings['db']
 
 		self.id = uuid.uuid4()
+
 		self.refresh_token = channel
 		if self.refresh_token == 'null': self.refresh_token = None
 
@@ -32,13 +33,17 @@ class SocketHandler(websocket.WebSocketHandler):
 			document = yield db.pilots.find_one({'refresh_token':self.refresh_token},{'CharacterName':1,'access_token':1}) 	
 	
 			if document and 'CharacterName' in document: 
+				
 				self.name = document['CharacterName']
 				self.access_token = document['access_token']
+				
+				outbound = {'welcome': {'id':str(self.id),'name':self.name}}
+
 			else:
-				self.name = str(self.refresh_token)
-				#need insert to db
-		
-			outbound = {'welcome': {'id':str(self.id),'name':self.name}}
+				payload = {'sso': self.settings['co'].sso}
+				if not 'state' in payload: payload['state'] = 'home'
+				
+				outbound = {'login': self.render_string('login.html',data=payload).decode("utf-8") }
 
 		else :
 			payload = {'sso': self.settings['co'].sso}
