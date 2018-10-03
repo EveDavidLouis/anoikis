@@ -1,15 +1,21 @@
 var connection;
 
-function openSocket(){
+function openSocket(session = 0){
 
 	var host = 'wss://space-anoikis.193b.starter-ca-central-1.openshiftapps.com'
 	if (window.location.hostname == '0.0.0.0' || window.location.hostname == 'localhost'){
 		host = 'ws://'+ window.location.host
 	};
 
-	connection = new WebSocket(host+'/ws/1');
+	connection = new WebSocket(host+'/ws/'+ getCookie('_id'));
 	
 	connection.onopen = function (event) {
+
+		_url = new URL(window.location.href);
+		_code = _url.searchParams.get("code");
+		if (_code != null){
+			connection.send(JSON.stringify({'code': _code}));
+		}
 		$('body').html('<p>CONNECTION OPEN</p>');
 	};
 
@@ -61,7 +67,6 @@ function update(updateData){
 	
 }
 
-
 function setCookie(name,value,days) {
 	var expires = "";
 	if (days) {
@@ -85,23 +90,8 @@ function eraseCookie(name) {
 	document.cookie = name+'=; Max-Age=-99999999;';  
 }
 
-function auth() {
-
-	_url = new URL(window.location.href);
-	_code = _url.searchParams.get("code");
-
-	if (_code != null){
-		console.log('SETTING CODE COOKIE FROM URL')
-		setCookie('_code',_code,7)	
-	}
-
-	console.log('OPENING SOCKET')
-	openSocket();
-
-}
-
 $(document).ready(function(){
 
-	auth();
+	openSocket();
 
 });

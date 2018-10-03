@@ -19,23 +19,15 @@ class SocketHandler(websocket.WebSocketHandler):
 		return True
 
 	@gen.coroutine
-	def open(self,channel=None):
+	def open(self,channel='null'):
 		
 		db = self.settings['db']
 
 		self.id = uuid.uuid4()
-		self.channel = str(channel)
+		self.refresh_token = channel
+		if self.refresh_token == 'null': self.refresh_token = None
 
-		_id = self.get_cookie('_id') 
-		if _id == None: _id = self.get_secure_cookie('_id') 
-
-		_code = self.get_cookie('_code') 
-		if _code == None: _code = self.get_secure_cookie('_code') 
-
-		logger.warning(self.request.cookies)
-
-		if _id : 
-			self.refresh_token = _id #.decode('UTF-8')
+		if self.refresh_token : 
 
 			document = yield db.pilots.find_one({'refresh_token':self.refresh_token},{'CharacterName':1,'access_token':1}) 	
 	
@@ -43,18 +35,11 @@ class SocketHandler(websocket.WebSocketHandler):
 				self.name = document['CharacterName']
 				self.access_token = document['access_token']
 			else:
-
 				self.name = str(self.refresh_token)
+				#need insert to db
 		
 			outbound = {'welcome': {'id':str(self.id),'name':self.name}}
 
-		elif _code:
-			_id = yield self.getSSO(_code)
-			if _id != '':
-				outbound={'setCookie':{'name':'_id','value':_id}}
-			else:
-				outbound={'eraseCookie':{'name':'_code'}}
-		
 		else :
 			payload = {'sso': self.settings['co'].sso}
 			if not 'state' in payload: payload['state'] = 'home'
@@ -75,37 +60,46 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		inbound = json.loads(inbound)
 		
-		#logger.warning(inbound)
+		logger.warning(inbound)
 
-		outbound={}
-		outbound['id'] = str(self.id)
-		outbound['channel'] = str(self.channel)
-		outbound['inbound'] = inbound
+		if 'code' in inbound:
+			_id = yield self.getSSO(inbound['code'])
+			if _id != '':
+				outbound={'setCookie':{'name':'_id','value':_id}}
+			else:
+				outbound={'eraseCookie':{'name':'_code'}}
 
-		if 'c' in inbound:
-			self.name = inbound['a']
-		elif 'a' in inbound:
-			self.name = inbound['a']
-		elif 'w' in inbound:
+			self.write_message(json.dumps(outbound))
 
-			headers = {}
-			body = ''
+		# outbound={}
+		# outbound['id'] = str(self.id)
+		# outbound['channel'] = str(self.channel)
+		# outbound['inbound'] = inbound
 
-			url = 'https://esi.evetech.net/latest/ui/autopilot/waypoint/'
-			url += '?add_to_beginning=' + str(True)
-			url += '&clear_other_waypoints=' + str(True)
-			url += '&destination_id=' + str(inbound['w']) #str(60009031)
-			url += '&token=' + str(self.access_token)
+		# if 'c' in inbound:
+		# 	self.name = inbound['a']
+		# elif 'a' in inbound:
+		# 	self.name = inbound['a']
+		# elif 'w' in inbound:
+
+		# 	headers = {}
+		# 	body = ''
+
+		# 	url = 'https://esi.evetech.net/latest/ui/autopilot/waypoint/'
+		# 	url += '?add_to_beginning=' + str(True)
+		# 	url += '&clear_other_waypoints=' + str(True)
+		# 	url += '&destination_id=' + str(inbound['w']) #str(60009031)
+		# 	url += '&token=' + str(self.access_token)
 			
-			request = {'kwargs':{'method':'POST','body':body,'headers':headers} ,'url':url}
-			logger.warning(request)
+		# 	request = {'kwargs':{'method':'POST','body':body,'headers':headers} ,'url':url}
+		# 	logger.warning(request)
 
-			response = yield self.settings['fe'].asyncFetch(request)
+		# 	response = yield self.settings['fe'].asyncFetch(request)
 
-		else:
-			outbound = [ {'id':str(w.id),'name':w.name} for w in self.waiters]
-			outbound = json.dumps(outbound)
-			self.broadcast(outbound)
+		# else:
+		# 	outbound = [ {'id':str(w.id),'name':w.name} for w in self.waiters]
+		# 	outbound = json.dumps(outbound)
+		# 	self.broadcast(outbound)
 
 	@gen.coroutine
 	def broadcast(self,inbound={}):
