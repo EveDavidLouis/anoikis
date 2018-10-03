@@ -32,12 +32,11 @@ class SocketHandler(websocket.WebSocketHandler):
 		_code = self.get_cookie('_code') 
 		if _code == None: _code = self.get_secure_cookie('_code') 
 
-		logger.info(self.get_secure_cookie('_code'))
-		
+		logger.warning(self.request.cookies)
+
 		if _id : 
 			self.refresh_token = _id #.decode('UTF-8')
 
-			logger.info('LOGIN:'+ self.refresh_token)
 			document = yield db.pilots.find_one({'refresh_token':self.refresh_token},{'CharacterName':1,'access_token':1}) 	
 	
 			if document and 'CharacterName' in document: 
