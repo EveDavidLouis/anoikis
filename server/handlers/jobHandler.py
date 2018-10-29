@@ -75,7 +75,7 @@ class CronWorker(object):
 
 		chunk = { 'kwargs':{'method':'POST' , 'body':body , 'headers':headers } , 'url':url }
 		response = yield self.fe.asyncFetch(chunk)
-		logging.warning("refresh status " + str(response.body))
+		
 		if response.code == 200:
 			payload = json.loads(response.body.decode())
 			result = yield self.db.pilots.update_one({'oAuth.refresh_token':refresh_token},{'$set':{'oAuth.refresh_token':payload['refresh_token']}},upsert=True)
