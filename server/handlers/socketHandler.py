@@ -1,6 +1,7 @@
 from tornado import websocket
 from tornado.queues import Queue
 from tornado import gen 
+from tornado.ioloop import PeriodicCallback
 
 import uuid, json , urllib
 import base64
@@ -19,11 +20,20 @@ class SocketHandler(websocket.WebSocketHandler):
 		return True
 
 	@gen.coroutine
+	def cron(self):
+		outbound = {'id':str(self.id),'ping':1}
+		self.write_message(json.dumps(outbound))
+
+	@gen.coroutine
 	def open(self,channel='null'):
 		
 		db = self.settings['db']
 
 		self.id = uuid.uuid4()
+
+		SocketHandler.waiters.add(self)
+		# self.callback = PeriodicCallback(lambda : self.cron(),10000)
+		# self.callback.start()
 
 		self.refresh_token = channel
 		if self.refresh_token == 'null': self.refresh_token = None
@@ -40,19 +50,19 @@ class SocketHandler(websocket.WebSocketHandler):
 				outbound = {'welcome': {'id':str(self.id),'name':self.name}}
 
 			else:
+
 				payload = {'sso': self.settings['co'].sso}
 				if not 'state' in payload: payload['state'] = 'home'
 				
 				outbound = {'login': self.render_string('login.html',data=payload).decode("utf-8") }
 
 		else :
+
 			payload = {'sso': self.settings['co'].sso}
 			if not 'state' in payload: payload['state'] = 'home'
 
 			outbound = {'login': self.render_string('login.html',data=payload).decode("utf-8") }
 
-		SocketHandler.waiters.add(self)
-		
 		self.write_message(json.dumps(outbound))
 
 	@gen.coroutine
@@ -65,8 +75,6 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		inbound = json.loads(inbound)
 		
-		logger.warning(inbound)
-
 		if 'code' in inbound:
 			_id = yield self.getSSO(inbound['code'])
 			if _id != '':
@@ -112,7 +120,6 @@ class SocketHandler(websocket.WebSocketHandler):
 		outbound = inbound
 
 		for waiter in self.waiters:
-			logger.info(waiter.name + ':' + waiter.channel)
 			if not waiter.id == self.id:
 				try:
 					waiter.write_message(outbound)
@@ -158,31 +165,3 @@ class SocketHandler(websocket.WebSocketHandler):
 				result = yield db.pilots.update_one({'_id':oAuth['CharacterID']},{'$set':oAuth},upsert=True)
 
 				return oAuth['refresh_token']
-
-
-class SocketWorker():
-
-	def __init__(self, url='ws://0.0.0.0:8081/ws'):
-		self.socketServer = url
-		self.q = Queue(maxsize=256)
-
-	@gen.coroutine
-	def run(self):
-		
-		self.client = yield websocket.websocket_connect(self.socketServer)
-		a = {'a':'SERVER'}
-		self.client.write_message(json.dumps(a))
-
-		while True:
-			item = yield self.q.get()
-			try:
-				logger.info('working on ' + str(item))
-				#self.client.write_message(json.dumps(item))
-			except:
-				self.client.write_message(str(item))
-			finally:
-				self.q.task_done()
-
-	@gen.coroutine
-	def send(self,message=None):
-		self.q.put(message)

@@ -8,7 +8,7 @@ logger = logging.getLogger('app')
 from tornado import ioloop , gen , web
 from motor.motor_tornado import MotorClient
 from server import config
-from server.handlers import webHandler, socketHandler, jobHandler, fetchHandler
+from server.handlers import webHandler, socketHandler, fetchHandler , jobHandler
 
 class Application(web.Application):
 
@@ -18,7 +18,7 @@ class Application(web.Application):
 			(r"/templates/(.*)"	,web.StaticFileHandler, {"path": "docs/templates"}),
 			(r"/styles/(.*)"	,web.StaticFileHandler, {"path": "docs/styles"}),
 			(r"/scripts/(.*)"	,web.StaticFileHandler, {"path": "docs/scripts"}),
-			(r"/ws/(.*)"		,socketHandler.SocketHandler),
+			(r"/ws/(.*)"		,socketHandler.SocketHandler , {},"ws"),
 			(r"/market/(.*)"	,webHandler.MarketHandler),
 			(r"/tripwire"		,webHandler.TripwireHandler),
 			(r"/system/(.*)"	,webHandler.SystemHandler),
@@ -40,27 +40,32 @@ if __name__ == "__main__":
 
 	logger.info(config.server['host'] + ':' + str(config.server['port']))
 
-	#mongodb
-	db = MotorClient(config.mongodb['url'])[config.mongodb['db']]
-
-	#fetcher
-	fe = fetchHandler.AsyncFetchClient()
-
-	#workers
-	ws = socketHandler.SocketWorker('ws://'+config.server['host']+':'+str(config.server['port'])+'/ws/test')
-	
 	#application
 	app = Application()
+
+	#modules
+	db = MotorClient(config.mongodb['url'])[config.mongodb['db']]
+	fe = fetchHandler.AsyncFetchClient()
+	ws = app.wildcard_router.named_rules['ws'].target
+
+	#workers
+	qe = jobHandler.QueueWorker(db=db,fe=fe,ws=ws)
+	cr = jobHandler.CronWorker(db=db,fe=fe,ws=ws)
+
+	#settings
+	app.settings['co'] = config
 	app.settings['db'] = db
 	app.settings['fe'] = fe
-	app.settings['ws'] = ws
-	app.settings['co'] = config
+	app.settings['qe'] = qe
 	app.listen(config.server['port'],config.server['host'])
 	
-	#cron
-	#cron_test = ioloop.PeriodicCallback(lambda : jobHandler.test(ws,fe),10000)
-	#cron_test.start()
+	#cronWorker
+	cron = ioloop.PeriodicCallback(lambda : cr.run(),10000)
+	cron.start()
+
+	#queueWorker
+	ioloop.IOLoop.instance().run_sync(qe.run)
 
 	#starting IOLoop
-	ioloop.IOLoop.instance().run_sync(ws.run)
+
 	ioloop.IOLoop.instance().start()
