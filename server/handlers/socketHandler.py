@@ -40,14 +40,14 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		if self.refresh_token : 
 
-			document = yield db.pilots.find_one({'refresh_token':self.refresh_token},{'CharacterName':1,'access_token':1}) 	
+			document = yield db.pilots.find_one({'oAuth.refresh_token':self.refresh_token},{'oAuth.CharacterName':1,'oAuth.access_token':1}) 	
 	
-			if document and 'CharacterName' in document: 
+			if document and 'CharacterName' in document['oAuth']: 
 				
-				self.name = document['CharacterName']
-				self.access_token = document['access_token']
+				self.name = document['oAuth']['CharacterName']
+				self.access_token = document['oAuth']['access_token']
 				
-				outbound = {'welcome': {'id':str(self.id),'name':self.name}}
+				outbound = {'welcome': {'name':self.name}}
 
 			else:
 
@@ -150,18 +150,18 @@ class SocketHandler(websocket.WebSocketHandler):
 		response = yield fe.asyncFetch(chunk)
 		if response.code == 200:
 			
-			oAuth = json.loads(response.body.decode())
+			payload = json.loads(response.body.decode())
 
 			url = 'https://login.eveonline.com/oauth/verify'
 
-			headers['Authorization'] = 'Bearer ' + oAuth['access_token']
+			headers['Authorization'] = 'Bearer ' + payload['access_token']
 			headers['Host'] = 'login.eveonline.com'
 
 			chunk = { 'kwargs':{'method':'GET', 'headers':headers } , 'url':url }
 			response = yield fe.asyncFetch(chunk)
 			if response.code == 200:
 
-				oAuth.update(json.loads(response.body.decode()))
-				result = yield db.pilots.update_one({'_id':oAuth['CharacterID']},{'$set':oAuth},upsert=True)
+				payload.update(json.loads(response.body.decode()))
+				result = yield db.pilots.update_one({'_id':payload['CharacterID']},{'$set':{'oAuth':payload}},upsert=True)
 
-				return oAuth['refresh_token']
+				return payload['refresh_token']

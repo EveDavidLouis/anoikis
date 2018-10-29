@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
 	#workers
 	qe = jobHandler.QueueWorker(db=db,fe=fe,ws=ws)
-	cr = jobHandler.CronWorker(db=db,fe=fe,ws=ws)
+	cr = jobHandler.CronWorker(db=db,fe=fe,ws=ws,co=config)
 
 	#settings
 	app.settings['co'] = config
