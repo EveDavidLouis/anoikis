@@ -55,7 +55,7 @@ class CronWorker(object):
 				
 				result = yield self.db.pilots.update_one({'_id':i['_id']},{'$set':{'SSOlocation':payload}},upsert=True)
 			else:
-				self.refreshSSO(id=i['_id'],refresh_token=i['oAuth']['refresh_token'])
+				self.refreshSSO(_id=i['_id'],refresh_token=i['oAuth']['refresh_token'])
 
 	@gen.coroutine
 	def refreshSSO(self,_id=None,refresh_token=None):
