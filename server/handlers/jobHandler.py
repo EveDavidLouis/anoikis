@@ -58,7 +58,7 @@ class CronWorker(object):
 				self.refreshSSO(id=i['_id'],refresh_token=i['oAuth']['refresh_token'])
 
 	@gen.coroutine
-	def refreshSSO(self,id=None,refresh_token=None):
+	def refreshSSO(self,_id=None,refresh_token=None):
 		
 		headers = {}
 		headers['Authorization'] = self.co.sso['authorization']
@@ -80,3 +80,5 @@ class CronWorker(object):
 			payload = json.loads(response.body.decode())
 			result = yield self.db.pilots.update_one({'oAuth.refresh_token':refresh_token},{'$set':{'oAuth.refresh_token':payload['refresh_token']}},upsert=True)
 			#return oAuth['refresh_token']
+		else :
+			logger.info( _id + ':' + str(response.code) +':' + str(response.body))
