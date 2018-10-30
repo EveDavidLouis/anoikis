@@ -55,10 +55,10 @@ class CronWorker(object):
 				
 				result = yield self.db.pilots.update_one({'_id':i['_id']},{'$set':{'SSOlocation':payload}},upsert=True)
 			else:
-				self.refreshSSO(_id=i['_id'],refresh_token=i['oAuth']['refresh_token'])
+				self.refreshSSO(oAuth=i['oAuth'])
 
 	@gen.coroutine
-	def refreshSSO(self,_id=None,refresh_token=None):
+	def refreshSSO(self,oAuth=None):
 		
 		headers = {}
 		headers['Authorization'] = self.co.sso['authorization']
@@ -67,7 +67,7 @@ class CronWorker(object):
 		
 		payload = {}
 		payload['grant_type'] = 'refresh_token'
-		payload['refresh_token'] = str(refresh_token)
+		payload['refresh_token'] = oAuth['refresh_token']
 
 		url = 'https://login.eveonline.com/oauth/token/'
 
@@ -77,8 +77,9 @@ class CronWorker(object):
 		response = yield self.fe.asyncFetch(chunk)
 		
 		if response.code == 200:
+			logger.info( oAuth['CharacterName'] + ':' + str(response.code) +':' + str(response.body))
 			payload = json.loads(response.body.decode())
-			result = yield self.db.pilots.update_one({'oAuth.refresh_token':refresh_token},{'$set':{'oAuth.refresh_token':payload['refresh_token']}},upsert=True)
+			result = yield self.db.pilots.update_one({'oAuth.refresh_token':oAuth['refresh_token']},{'$set':{'oAuth.access_token':payload['access_token']}},upsert=True)
 			#return oAuth['refresh_token']
 		else :
-			logger.info( _id + ':' + str(response.code) +':' + str(response.body))
+			logger.info( oAuth['CharacterName'] + ':' + str(response.code) +':' + str(response.body))
