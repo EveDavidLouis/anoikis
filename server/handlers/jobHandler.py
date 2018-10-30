@@ -51,8 +51,7 @@ class CronWorker(object):
 			response = yield self.fe.asyncFetch(chunk)
 			if response.code == 200:
 				payload = json.loads(response.body.decode())
-				logger.info( i['oAuth']['CharacterName'] + ':' + str(payload) )
-				
+				#logger.info( i['oAuth']['CharacterName'] + ':' + str(payload) )
 				result = yield self.db.pilots.update_one({'_id':i['_id']},{'$set':{'SSOlocation':payload}},upsert=True)
 			else:
 				self.refreshSSO(oAuth=i['oAuth'])
@@ -77,9 +76,10 @@ class CronWorker(object):
 		response = yield self.fe.asyncFetch(chunk)
 		
 		if response.code == 200:
-			logger.info( oAuth['CharacterName'] + ':' + str(response.code) +':' + str(response.body))
 			payload = json.loads(response.body.decode())
+			#logger.info( oAuth['CharacterName'] + ':' + payload['access_token'])
 			result = yield self.db.pilots.update_one({'oAuth.refresh_token':oAuth['refresh_token']},{'$set':{'oAuth.access_token':payload['access_token']}},upsert=True)
-			#return oAuth['refresh_token']
+			return payload['access_token']
+
 		else :
-			logger.info( oAuth['CharacterName'] + ':' + str(response.code) +':' + str(response.body))
+			logger.warning( oAuth['CharacterName'] + ':' + str(response.code) +':' + str(response.body))
