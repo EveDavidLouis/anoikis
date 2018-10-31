@@ -41,6 +41,9 @@ class CronWorker(object):
 	@gen.coroutine
 	def run(self):
 
+		for i in self.ws.waiters:
+			i.write_message({'clients':len(self.ws.waiters)})
+
 		collection = self.db['pilots']
 		cursor = collection.find({},{'oAuth':1})
 		document = yield cursor.to_list(length=10000)

@@ -27,7 +27,7 @@ class Application(web.Application):
 		]
 		settings = dict(	
 			cookie_secret=config.server['secret'],
-			template_path=os.path.join(os.path.dirname(__file__), "docs"),
+			template_path=os.path.join(os.path.dirname(__file__), "server/templates"),
 			static_path=os.path.join(os.path.dirname(__file__), "docs"),
 			static_url_prefix = "/static/",
 			xsrf_cookies=False,
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 	app.listen(config.server['port'],config.server['host'])
 	
 	#cronWorker
-	cron = ioloop.PeriodicCallback(lambda : cr.run(),10000)
+	cron = ioloop.PeriodicCallback(lambda : cr.run(),30000)
 	cron.start()
 
 	#queueWorker

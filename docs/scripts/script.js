@@ -17,12 +17,12 @@ function openSocket(session = 0){
 		if (_code != null){
 			connection.send(JSON.stringify({'code': _code}));
 		}
-		$('body').html('<p>CONNECTION OPEN</p>');
 	};
 
 	connection.onclose = function (event) {
 
-		$('body').html('<p>CONNECTION CLOSE</p>');
+		// $('body').html('<p>CONNECTION CLOSE</p>');
+		$('body').load('offline.html').fadeIn('Slow');
 		setTimeout(openSocket, 2000);
 	};
 
@@ -53,13 +53,18 @@ function update(updateData){
 	}
 
 	if ('login' in updateData){
-		$('body').html(updateData.login);
+		$('body').fadeIn('slow').html(updateData.login);
 	}
 
 	if ('welcome' in updateData){
-		$('body').html('Welcome ' + updateData.welcome.name);
+		$('body').html(updateData.welcome).fadeIn('slow');
 	}
 	
+}
+
+function logout () {
+	eraseCookie('_id');
+	location.reload();
 }
 
 function setCookie(name,value,days) {

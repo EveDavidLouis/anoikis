@@ -40,14 +40,18 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		if self.refresh_token : 
 
-			document = yield db.pilots.find_one({'oAuth.refresh_token':self.refresh_token},{'oAuth.CharacterName':1,'oAuth.access_token':1}) 	
+			document = yield db.pilots.find_one({'oAuth.refresh_token':self.refresh_token},{'oAuth':1}) 	
 	
 			if document and 'CharacterName' in document['oAuth']: 
 				
-				self.name = document['oAuth']['CharacterName']
+				self.CharacterName = document['oAuth']['CharacterName']
+				self.CharacterID = document['oAuth']['CharacterID']
 				self.access_token = document['oAuth']['access_token']
 				
-				outbound = {'welcome': {'name':self.name}}
+				payload = document['oAuth']
+
+				outbound = {'welcome': {'CharacterName':self.CharacterName,'CharacterID':self.CharacterID}}
+				outbound = {'welcome': self.render_string('welcome.html',data=payload).decode("utf-8") }
 
 			else:
 
