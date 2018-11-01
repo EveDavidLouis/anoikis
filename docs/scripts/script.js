@@ -21,13 +21,12 @@ function openSocket(session = 0){
 
 	connection.onclose = function (event) {
 
-		// $('body').html('<p>CONNECTION CLOSE</p>');
-		$('body').load('offline.html').fadeIn('Slow');
+		$('#main-container').load('offline.html').fadeIn('Slow');
 		setTimeout(openSocket, 2000);
 	};
 
 	connection.onerror = function (event) {
-		$('body').html('<p>ERROR</p>');
+
 	};
 
 	connection.onmessage = function (event) {
