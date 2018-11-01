@@ -50,7 +50,7 @@ class SocketHandler(websocket.WebSocketHandler):
 				
 				payload = document['oAuth']
 
-				outbound = {'welcome': {'CharacterName':self.CharacterName,'CharacterID':self.CharacterID}}
+				#outbound = {'welcome': {'CharacterName':self.CharacterName,'CharacterID':self.CharacterID}}
 				outbound = {'welcome': self.render_string('welcome.html',data=payload).decode("utf-8") }
 
 			else:

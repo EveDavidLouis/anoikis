@@ -60,8 +60,8 @@ if __name__ == "__main__":
 	app.listen(config.server['port'],config.server['host'])
 	
 	#cronWorker
-	cron = ioloop.PeriodicCallback(lambda : cr.run(),30000)
-	cron.start()
+	#cron = ioloop.PeriodicCallback(lambda : cr.run(),30000)
+	#cron.start()
 
 	#queueWorker
 	ioloop.IOLoop.instance().run_sync(qe.run)

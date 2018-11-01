@@ -53,11 +53,13 @@ function update(updateData){
 	}
 
 	if ('login' in updateData){
-		$('body').fadeIn('slow').html(updateData.login);
+		$('#main-container').fadeIn('slow').html(updateData.login).fadeIn('slow');
+		$('#navbar').hide();
 	}
 
 	if ('welcome' in updateData){
-		$('body').html(updateData.welcome).fadeIn('slow');
+		$('#brand').html(updateData.welcome).fadeIn('slow');
+		$('#navbar').show();
 	}
 	
 }
