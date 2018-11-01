@@ -21,7 +21,7 @@ function openSocket(session = 0){
 
 	connection.onclose = function (event) {
 
-		$('#main-container').load('offline.html').fadeIn('Slow');
+		// $('#main-container').load('offline.html').fadeIn('Slow');
 		setTimeout(openSocket, 2000);
 	};
 
