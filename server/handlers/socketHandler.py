@@ -27,6 +27,7 @@ class SocketHandler(websocket.WebSocketHandler):
 	@gen.coroutine
 	def open(self,channel='null'):
 		
+
 		db = self.settings['db']
 
 		self.id = uuid.uuid4()
@@ -35,35 +36,44 @@ class SocketHandler(websocket.WebSocketHandler):
 		# self.callback = PeriodicCallback(lambda : self.cron(),10000)
 		# self.callback.start()
 
-		self.refresh_token = channel
-		if self.refresh_token == 'null': self.refresh_token = None
+		self.channel = channel
+		self.token = self.get_cookie('_id')
 
-		if self.refresh_token : 
+		if self.token == 'null': self.token = None
 
-			document = yield db.pilots.find_one({'oAuth.refresh_token':self.refresh_token},{'oAuth':1}) 	
+		if self.token : 
+
+			document = yield db.pilots.find_one({'esi_login.access_token':self.token},{'esi_login':1,'Characters':1}) 	
 	
-			if document and 'CharacterName' in document['oAuth']: 
+			if document and 'CharacterName' in document['esi_login']: 
 				
-				self.CharacterName = document['oAuth']['CharacterName']
-				self.CharacterID = document['oAuth']['CharacterID']
-				self.access_token = document['oAuth']['access_token']
-				
-				payload = document['oAuth']
+				self.CharacterName = document['esi_login']['CharacterName']
+				self.CharacterID = document['esi_login']['CharacterID']
+				self.access_token = document['esi_login']['access_token']
 
-				#outbound = {'welcome': {'CharacterName':self.CharacterName,'CharacterID':self.CharacterID}}
-				outbound = {'welcome': self.render_string('welcome.html',data=payload).decode("utf-8") }
+				if not 'Characters' in document: document['Characters'] = []
+
+				payload = {}
+				payload['pilot'] = document['esi_login']
+				payload['Characters'] = [{'CharacterID':i , 'CharacterName': document['Characters'][i]['CharacterName'] } for i in document['Characters'] ]
+				payload['esi_api'] = self.settings['co'].esi_api
+				payload['state'] = 'api'
+
+				outbound = {'brand': self.render_string('brand.html',data=payload).decode("utf-8") 
+					,'main': self.render_string('addCharacter.html',data=payload).decode("utf-8") 
+					}
 
 			else:
 
-				payload = {'sso': self.settings['co'].sso}
-				if not 'state' in payload: payload['state'] = 'home'
+				payload = {'esi_login': self.settings['co'].esi_login}
+				payload['state'] = 'ERROR'
 				
-				outbound = {'login': self.render_string('login.html',data=payload).decode("utf-8") }
+				outbound = {'ERROR': 'token' }
 
 		else :
 
-			payload = {'sso': self.settings['co'].sso}
-			if not 'state' in payload: payload['state'] = 'home'
+			payload = {'esi_login': self.settings['co'].esi_login}
+			if not 'state' in payload: payload['state'] = 'login'
 
 			outbound = {'login': self.render_string('login.html',data=payload).decode("utf-8") }
 
@@ -79,14 +89,31 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		inbound = json.loads(inbound)
 		
-		if 'code' in inbound:
-			_id = yield self.getSSO(inbound['code'])
-			if _id != '':
-				outbound={'setCookie':{'name':'_id','value':_id}}
+		db = self.settings['db']
+
+		if 'code' in inbound and 'state' in inbound:
+
+			result = yield self.getSSO(inbound['code'],inbound['state'])
+
+			if inbound['state'] =='login':
+
+				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':{'esi_login':result}},upsert=True)
+
+				outbound={'setCookie':{'name':'_id','value':result['access_token']}}
+				self.write_message(json.dumps(outbound))
+
+			if inbound['state'] =='api':
+
+				yield db.pilots.update_one({'esi_login.access_token':self.token},{'$set':{'Characters.'+str(result['CharacterID']):result}},upsert=True)
+
+				outbound={'addCharacter':{'CharacterID':result['CharacterID'],'CharacterName':result['CharacterName']}}
+				self.write_message(json.dumps(outbound))
+
+			#if _id and _id != '':
+			#	outbound={'setCookie':{'name':'_id','value':_id}}
+			#	self.write_message(json.dumps(outbound))
 			# else:
 			# 	outbound={'eraseCookie':{'name':'_id'}}
-
-			self.write_message(json.dumps(outbound))
 
 		# outbound={}
 		# outbound['id'] = str(self.id)
@@ -131,14 +158,19 @@ class SocketHandler(websocket.WebSocketHandler):
 					logging.error("Error sending message")
 
 	@gen.coroutine
-	def getSSO(self,code=None):
-		
+	def getSSO(self,code=None,state=None):
+
 		db = self.settings['db']
 		fe = self.settings['fe']
 		co = self.settings['co']
 
 		headers = {}
-		headers['Authorization'] = co.sso['authorization']
+		
+		if state == 'api':
+			headers['Authorization'] = co.esi_api['authorization']
+		else:
+			headers['Authorization'] = co.esi_login['authorization']
+
 		headers['Content-Type'] = 'application/x-www-form-urlencoded'
 		headers['Host'] = 'login.eveonline.com'
 		
@@ -152,6 +184,7 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		chunk = { 'kwargs':{'method':'POST' , 'body':body , 'headers':headers } , 'url':url }
 		response = yield fe.asyncFetch(chunk)
+
 		if response.code == 200:
 			
 			payload = json.loads(response.body.decode())
@@ -163,9 +196,18 @@ class SocketHandler(websocket.WebSocketHandler):
 
 			chunk = { 'kwargs':{'method':'GET', 'headers':headers } , 'url':url }
 			response = yield fe.asyncFetch(chunk)
+			
 			if response.code == 200:
 
 				payload.update(json.loads(response.body.decode()))
-				result = yield db.pilots.update_one({'_id':payload['CharacterID']},{'$set':{'oAuth':payload}},upsert=True)
+				return payload
 
-				return payload['refresh_token']
+				# logger.warning(state)
+				# if state == 'api':
+				# 	result = yield db.pilots.update_one({'_id':payload['CharacterID']},{'$set':{str(payload['CharacterID']):payload}},upsert=True)
+				# 	return ''
+				# else:
+				# 	result = yield db.pilots.update_one({'_id':payload['CharacterID']},{'$set':{'esi_login':payload}},upsert=True)
+				# 	return payload['access_token']
+
+				

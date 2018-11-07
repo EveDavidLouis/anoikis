@@ -8,64 +8,58 @@ function openSocket(session = 0){
 		host = 'ws://'+ window.location.host
 	};
 
-	connection = new WebSocket(host+'/ws/'+ getCookie('_id'));
+	// connection = new WebSocket(host+'/ws/'+ getCookie('_id'));
+	connection = new WebSocket(host+'/ws/esi');
 	
 	connection.onopen = function (event) {
 
 		_url = new URL(window.location.href);
 		_code = _url.searchParams.get("code");
-		if (_code != null){
-			connection.send(JSON.stringify({'code': _code}));
+		_state = _url.searchParams.get("state");
+		if (_code != null && _state != null){
+			connection.send(JSON.stringify({'code': _code,'state': _state}));
 		}
+		
 	};
 
 	connection.onclose = function (event) {
-
-		// $('#main-container').load('offline.html').fadeIn('Slow');
 		setTimeout(openSocket, 2000);
 	};
 
 	connection.onerror = function (event) {
-
 	};
 
 	connection.onmessage = function (event) {
-
-		data = JSON.parse(event.data);
-		update(data);
-
+		update(JSON.parse(event.data));
 	};
 }
 
 function update(updateData){
 	
-	// console.log(updateData);
+	console.log(updateData);
+	
+	if ('login' in updateData){
+		$('#main-container').html(updateData.login);
+		$('#navbar').hide();
+	}
+
+	if ('brand' in updateData){
+		$('#brand').html(updateData.brand);
+		$('#navbar').show();
+	}
+
+	if ('main' in updateData){
+		$('#main-container').html(updateData.main);
+	}
 	
 	if ('setCookie' in updateData){
 		setCookie(updateData.setCookie.name,updateData.setCookie.value,7);
 		window.location = window.location.origin;
 	}
 
-	if ('eraseCookie' in updateData){
-		eraseCookie(updateData.eraseCookie.name);
+	if ('addCharacter' in updateData){
 		window.location = window.location.origin;
 	}
-
-	if ('login' in updateData){
-		$('#main-container').fadeIn('slow').html(updateData.login).fadeIn('slow');
-		$('#navbar').hide();
-	}
-
-	if ('welcome' in updateData){
-		$('#brand').html(updateData.welcome).fadeIn('slow');
-		$('#navbar').show();
-	}
-	
-}
-
-function logout () {
-	eraseCookie('_id');
-	location.reload();
 }
 
 function setCookie(name,value,days) {
@@ -87,12 +81,16 @@ function getCookie(name) {
 	}
 	return null;
 }
+
 function eraseCookie(name) {   
 	document.cookie = name+'=; Max-Age=-99999999;';  
 }
 
+function logout () {
+	eraseCookie('_id');
+	location.reload();
+}
+
 $(document).ready(function(){
-
 	openSocket();
-
 });

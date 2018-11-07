@@ -1,0 +1,17 @@
+<div class="container">
+	<div class="row">
+		{% for i in data['Characters'] %}
+		<div class="col-sm-4 char">
+			<img alt="{{ i['CharacterName'] }}" src="https://image.eveonline.com/Character/{{i['CharacterID']}}_128.jpg">
+		</div>
+		{% end %}
+	</div>	
+	<div class="row">
+		<div class="col-sm-12">
+				<a class="btn icon-btn btn-success" href="https://login.eveonline.com/oauth/authorize/?response_type=code&redirect_uri={{ data['esi_api']['callback'] }}&scope={{ data['esi_api']['scope'] }}&client_id={{ data['esi_api']['clientId'] }}&state={{data['state']}}">
+				<span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span>
+				Add Character
+			</a>
+		</div>
+	</div>
+</div>

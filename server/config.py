@@ -25,12 +25,22 @@ mongodb['url'] = 'mongodb://'+mongodb['user']+':'+ mongodb['pwd'] +'@'+str(mongo
 tripwire = []
 if os.environ.get('TRIPWIRE'): 	tripwire = json.loads(os.environ.get('TRIPWIRE'))
 
-#sso
-sso = dict(
-	callback = os.environ.get('SSO_CALLBACK','')
-	,clientId = os.environ.get('SSO_CLIENTID','')
-	,secretId = os.environ.get('SSO_SECRETID','')
-	,scope = os.environ.get('SSO_SCOPE','')
+#esi_api
+esi_api = dict(
+	callback = os.environ.get('ESI_API_CALLBACK','')
+	,clientId = os.environ.get('ESI_API_CLIENTID','')
+	,secretId = os.environ.get('ESI_API_SECRETID','')
+	,scope = os.environ.get('ESI_API_SCOPE','')
 )
-sso['code'] = sso['clientId']+ ':' + sso['secretId']
-sso['authorization'] = 'Basic ' + str(base64.b64encode(sso['code'].encode()),'utf-8')
+esi_api['code'] = esi_api['clientId']+ ':' + esi_api['secretId']
+esi_api['authorization'] = 'Basic ' + str(base64.b64encode(esi_api['code'].encode()),'utf-8')
+
+#esi_login
+esi_login = dict(
+	callback = os.environ.get('ESI_LOGIN_CALLBACK','')
+	,clientId = os.environ.get('ESI_LOGIN_CLIENTID','')
+	,secretId = os.environ.get('ESI_LOGIN_SECRETID','')
+)
+esi_login['code'] = esi_login['clientId']+ ':' + esi_login['secretId']
+esi_login['authorization'] = 'Basic ' + str(base64.b64encode(esi_login['code'].encode()),'utf-8')
+
