@@ -13,6 +13,8 @@ function openSocket(session = 0){
 	
 	connection.onopen = function (event) {
 
+		$('#brand').html('ESI-ONLINE');
+
 		_url = new URL(window.location.href);
 		_code = _url.searchParams.get("code");
 		_state = _url.searchParams.get("state");
@@ -23,10 +25,15 @@ function openSocket(session = 0){
 	};
 
 	connection.onclose = function (event) {
+		$('#main-container').html('');
+		$('#brand').html('ESI-OFFLINE');
 		setTimeout(openSocket, 2000);
 	};
 
 	connection.onerror = function (event) {
+		$('#main-container').html('');
+		$('#brand').html('ESI-ERROR');
+		setTimeout(openSocket, 2000);
 	};
 
 	connection.onmessage = function (event) {
