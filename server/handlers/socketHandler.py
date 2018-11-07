@@ -25,9 +25,8 @@ class SocketHandler(websocket.WebSocketHandler):
 		self.write_message(json.dumps(outbound))
 
 	@gen.coroutine
-	def open(self,channel='null'):
+	def open(self,channel=''):
 		
-
 		db = self.settings['db']
 
 		self.id = uuid.uuid4()
@@ -36,12 +35,9 @@ class SocketHandler(websocket.WebSocketHandler):
 		# self.callback = PeriodicCallback(lambda : self.cron(),10000)
 		# self.callback.start()
 
-		self.channel = channel
-		self.token = self.get_cookie('_id')
+		self.token = channel #self.get_cookie('_id')
 
-		if self.token == 'null': self.token = None
-
-		if self.token : 
+		if self.token != '': 
 
 			document = yield db.pilots.find_one({'esi_login.access_token':self.token},{'esi_login':1,'Characters':1}) 	
 	

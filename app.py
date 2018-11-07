@@ -18,7 +18,7 @@ class Application(web.Application):
 			(r"/templates/(.*)"	,web.StaticFileHandler, {"path": "docs/templates"}),
 			(r"/styles/(.*)"	,web.StaticFileHandler, {"path": "docs/styles"}),
 			(r"/scripts/(.*)"	,web.StaticFileHandler, {"path": "docs/scripts"}),
-			(r"/ws/(.*)"		,socketHandler.SocketHandler , {},"ws"),
+			(r"/esi/(.*)"	,socketHandler.SocketHandler , {},"wsi"),
 			(r"/market/(.*)"	,webHandler.MarketHandler),
 			(r"/tripwire"		,webHandler.TripwireHandler),
 			(r"/system/(.*)"	,webHandler.SystemHandler),
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 	#modules
 	db = MotorClient(config.mongodb['url'])[config.mongodb['db']]
 	fe = fetchHandler.AsyncFetchClient()
-	ws = app.wildcard_router.named_rules['ws'].target
+	ws = app.wildcard_router.named_rules['wsi'].target
 
 	#workers
 	qe = jobHandler.QueueWorker(db=db,fe=fe,ws=ws)

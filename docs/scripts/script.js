@@ -3,13 +3,11 @@ var connection;
 function openSocket(session = 0){
 
 	var host = 'wss://esi-eve-online.193b.starter-ca-central-1.openshiftapps.com'
-	// var host = 'wss://esi-eve-online.7e14.starter-us-west-2.openshiftapps.com'
 	if (window.location.hostname == '0.0.0.0' || window.location.hostname == 'localhost'){
 		host = 'ws://'+ window.location.host
 	};
 
-	// connection = new WebSocket(host+'/ws/'+ getCookie('_id'));
-	connection = new WebSocket(host+'/ws/esi');
+	connection = new WebSocket(host+'/esi/'+ getCookie('_id'));
 	
 	connection.onopen = function (event) {
 
@@ -86,7 +84,7 @@ function getCookie(name) {
 		while (c.charAt(0)==' ') c = c.substring(1,c.length);
 		if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
 	}
-	return null;
+	return '';
 }
 
 function eraseCookie(name) {   
