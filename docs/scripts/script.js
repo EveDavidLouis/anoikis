@@ -4,6 +4,7 @@ var i;
 function openSocket(session = 0){
 
 	var host = 'wss://esi-eve-online.193b.starter-ca-central-1.openshiftapps.com'
+	host = 'wss://esi-online.herokuapp.com'
 	if (window.location.hostname == '0.0.0.0' || window.location.hostname == 'localhost'){
 		host = 'ws://'+ window.location.host
 	};
