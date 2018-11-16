@@ -3,14 +3,37 @@ var connection;
 function openSocket(session = 0){
 
 	var host = 'wss://esi-eve-online.193b.starter-ca-central-1.openshiftapps.com'
-	if (window.location.hostname == '0.0.0.0' || window.location.hostname == 'localhost'){
-		host = 'ws://'+ window.location.host
+	// if (window.location.hostname == '0.0.0.0' || window.location.hostname == 'localhost'){
+	// 	host = 'ws://'+ window.location.host
+	// };
+	$('.loader').show();
+	
+	connection = new WebSocket(host+'/esi/'+ getCookie('_id'));
+	console.log('Connecting....');
+
+	connection.onerror = function (event) {
+		
+		
+
+		$('.loader').show();
+		$('#brand').html('ESI-ERROR');
+		
+		connection.close();
+		setTimeout(openSocket, 2000);
 	};
 
-	connection = new WebSocket(host+'/esi/'+ getCookie('_id'));
-	
+	connection.onclose = function (event) {
+		
+		$('.loader').show();
+		$('#brand').html('ESI-OFFLINE');
+
+		setTimeout(openSocket, 2000);
+
+	};
+
 	connection.onopen = function (event) {
 
+		$('.loader').hide();
 		$('#brand').html('ESI-ONLINE');
 
 		_url = new URL(window.location.href);
@@ -22,19 +45,10 @@ function openSocket(session = 0){
 		
 	};
 
-	connection.onclose = function (event) {
-		// $('#main-container').html('');
-		$('#brand').html('ESI-OFFLINE');
-	};
-
-	connection.onerror = function (event) {
-		// $('#main-container').html('');
-		$('#brand').html('ESI-ERROR');
-	};
-
 	connection.onmessage = function (event) {
 		update(JSON.parse(event.data));
 	};
+
 }
 
 function update(updateData){
