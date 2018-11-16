@@ -1,4 +1,5 @@
 var connection;
+var i;
 
 function openSocket(session = 0){
 
@@ -9,25 +10,26 @@ function openSocket(session = 0){
 	$('.loader').show();
 	
 	connection = new WebSocket(host+'/esi/'+ getCookie('_id'));
-	console.log('Connecting....');
+	i=i+1
+	console.log('Connecting....'+ i);
 
 	connection.onerror = function (event) {
 		
-		
-
+		console.log('Error....'+ i);
 		$('.loader').show();
 		$('#brand').html('ESI-ERROR');
 		
 		connection.close();
-		setTimeout(openSocket, 2000);
 	};
 
 	connection.onclose = function (event) {
 		
+		console.log('Close....'+ i);
+		
 		$('.loader').show();
 		$('#brand').html('ESI-OFFLINE');
 
-		setTimeout(openSocket, 2000);
+		setTimeout(openSocket, 500);
 
 	};
 
@@ -109,5 +111,6 @@ function logout () {
 }
 
 $(document).ready(function(){
+	i = 0;
 	openSocket();
 });
