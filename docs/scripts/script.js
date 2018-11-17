@@ -48,37 +48,70 @@ function openSocket(session = 0){
 	};
 
 	connection.onmessage = function (event) {
-		update(JSON.parse(event.data));
+		
+		data = JSON.parse(event.data);
+
+		if ('endPoint' in data){
+			update(data);
+		} else {
+			console.log('NO ENDPOINT');
+			console.log(data);	
+		}
 	};
 
 }
 
-function update(updateData){
+function update(msg){
 	
-	console.log(updateData);
-	
-	if ('login' in updateData){
-		$('#main-container').html(updateData.login);
-		$('#navbar').hide();
+
+	switch(msg.endPoint) {
+		case 'esi-login':
+			setCookie(msg.data.name,msg.data.value,7);
+			window.location = window.location.origin;
+			break;
+		case 'welcome':
+			$('#main-container').html(msg.data);
+			$('#navbar').hide();
+			break;
+		case 'home':	
+			$('#navbar').show();
+			$('#brand').html('<img src="https://image.eveonline.com/Character/'+ msg.data.CharacterID+'_64.jpg">'+msg.data.CharacterName);
+			$('#main-container').html(msg.data);
+			break;
+		case 'myCharacters':
+			console.log('MYCHARACTERS');
+			console.log(msg.data);
+			data = '<p>'+JSON.stringify(msg.data.characters)+'</p>'
+			data += msg.data.addCharacter;
+			$('#main-container').html(data);
+			break;
+		default:
+			console.log('UNKNOW ENDPOINT');
+			console.log(msg);
 	}
 
-	if ('brand' in updateData){
-		$('#brand').html(updateData.brand);
-		$('#navbar').show();
-	}
+	// if (msg.endPoint == 'login'){
+	// 	$('#main-container').html(msg.login);
+	// 	$('#navbar').hide();
+	// }
 
-	if ('main' in updateData){
-		$('#main-container').html(updateData.main);
-	}
+	// if ('brand' in msg){
+	// 	$('#brand').html('<img src="https://image.eveonline.com/Character/'++'_64.jpg">'+);
+	// 	$('#navbar').show();
+	// }
+
+	// if ('main' in msg){
+	// 	$('#main-container').html(msg.main);
+	// }
 	
-	if ('setCookie' in updateData){
-		setCookie(updateData.setCookie.name,updateData.setCookie.value,7);
-		window.location = window.location.origin;
-	}
+	// if ('setCookie' in msg){
+	// 	setCookie(msg.setCookie.name,msg.setCookie.value,7);
+	// 	window.location = window.location.origin;
+	// }
 
-	if ('addCharacter' in updateData){
-		window.location = window.location.origin;
-	}
+	// if ('addCharacter' in msg){
+	// 	window.location = window.location.origin;
+	// }
 }
 
 function setCookie(name,value,days) {
@@ -109,6 +142,11 @@ function logout () {
 	eraseCookie('_id');
 	location.reload();
 }
+
+function ownedCharacters () {
+	connection.send(JSON.stringify({'ownedCharacters': 'GET'}));
+}
+
 
 $(document).ready(function(){
 	i = 0;

@@ -41,8 +41,8 @@ class CronWorker(object):
 	@gen.coroutine
 	def run(self):
 
-		for i in self.ws.waiters:
-			i.write_message({'clients':len(self.ws.waiters)})
+		# for i in self.ws.waiters:
+		# 	i.write_message({'clients':len(self.ws.waiters)})
 
 		cursor = self.db['pilots'].find({'esi_api':{'$exists':1}},{'esi_api.CharacterID':1,'esi_api.access_token':1,'esi_api.refresh_token':1})
 		documentList = yield cursor.to_list(length=10000)

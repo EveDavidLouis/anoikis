@@ -48,9 +48,8 @@ class SocketHandler(websocket.WebSocketHandler):
 				self.access_token = esi_login['access_token']
 
 				payload = {}
-				payload['pilot'] = esi_login
-				payload['esi_api'] = self.settings['co'].esi_api
-				payload['state'] = 'api'
+				payload['CharacterName'] = self.CharacterName
+				payload['CharacterID'] = self.CharacterID
 				payload['Characters'] = []
 
 				cursor = db['pilots'].find({'owner':self.CharacterID},{'esi_api.CharacterID':1,'esi_api.CharacterName':1,'location':1})
@@ -59,23 +58,22 @@ class SocketHandler(websocket.WebSocketHandler):
 					for char in charList:
 						payload['Characters'].append(char)
 
-				outbound = {'brand': self.render_string('brand.html',data=payload).decode("utf-8") 
-					,'main': self.render_string('addCharacter.html',data=payload).decode("utf-8") 
+				outbound = {'endPoint':'home'
+					,'data':payload
+					#,'brand': self.render_string('brand.html',data=payload).decode("utf-8") 
+					#,'main': self.render_string('addCharacter.html',data=payload).decode("utf-8") 
 					}
 
 			else:
 
-				payload = {'esi_login': self.settings['co'].esi_login}
-				payload['state'] = 'ERROR'
-				
-				outbound = {'ERROR': 'token' }
+				outbound = {'endPoint':'error','data':'pilot not found!'}
 
 		else :
 
 			payload = {'esi_login': self.settings['co'].esi_login}
 			if not 'state' in payload: payload['state'] = 'login'
 
-			outbound = {'login': self.render_string('login.html',data=payload).decode("utf-8") }
+			outbound = {'endPoint':'welcome','data':self.render_string('login.html',data=payload).decode("utf-8") }
 
 		self.write_message(json.dumps(outbound))
 
@@ -99,7 +97,7 @@ class SocketHandler(websocket.WebSocketHandler):
 
 				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':result},upsert=True)
 
-				outbound={'setCookie':{'name':'_id','value':result['access_token']}}
+				outbound={'endPoint':'esi-login','data':{'name':'_id','value':result['access_token']}}
 				self.write_message(json.dumps(outbound))
 
 			if inbound['state'] =='api':
@@ -107,14 +105,27 @@ class SocketHandler(websocket.WebSocketHandler):
 #				yield db.pilots.update_one({'esi_login.access_token':self.token},{'$set':{'Characters.'+str(result['CharacterID']):result}},upsert=True)
 				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':{'esi_api':result,'owner':self.CharacterID}},upsert=True)
 				
-				outbound={'addCharacter':{'CharacterID':result['CharacterID'],'CharacterName':result['CharacterName']}}
+				outbound={'endPoint':'esi-api','data':{'CharacterID':result['CharacterID'],'CharacterName':result['CharacterName']}}
 				self.write_message(json.dumps(outbound))
 
-			#if _id and _id != '':
-			#	outbound={'setCookie':{'name':'_id','value':_id}}
-			#	self.write_message(json.dumps(outbound))
-			# else:
-			# 	outbound={'eraseCookie':{'name':'_id'}}
+		if 'ownedCharacters' in inbound:
+
+			payload = {}
+			
+			payload_link = {'esi_api': self.settings['co'].esi_api,'state':'api'}
+			payload['addCharacter'] = self.render_string('addCharacter.html',data=payload_link).decode("utf-8") 
+
+			payload['characters'] = []
+
+			cursor = db['pilots'].find({'owner':self.CharacterID},{'_id':0,'esi_api.CharacterID':1,'esi_api.CharacterName':1})
+			charList = yield cursor.to_list(length=10000)
+			if charList:
+				for char in charList:
+					payload['characters'].append(char['esi_api'])
+
+			outbound = {'endPoint':'myCharacters', 'data':payload}
+
+			self.write_message(json.dumps(outbound))
 
 		# outbound={}
 		# outbound['id'] = str(self.id)
@@ -202,13 +213,3 @@ class SocketHandler(websocket.WebSocketHandler):
 
 				payload.update(json.loads(response.body.decode()))
 				return payload
-
-				# logger.warning(state)
-				# if state == 'api':
-				# 	result = yield db.pilots.update_one({'_id':payload['CharacterID']},{'$set':{str(payload['CharacterID']):payload}},upsert=True)
-				# 	return ''
-				# else:
-				# 	result = yield db.pilots.update_one({'_id':payload['CharacterID']},{'$set':{'esi_login':payload}},upsert=True)
-				# 	return payload['access_token']
-
-				
