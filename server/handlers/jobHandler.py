@@ -4,7 +4,7 @@ from tornado.queues import Queue
 import urllib
 
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger('cron')
 
 class QueueWorker():
@@ -44,26 +44,29 @@ class CronWorker(object):
 		for i in self.ws.waiters:
 			i.write_message({'clients':len(self.ws.waiters)})
 
-		collection = self.db['pilots']
-		cursor = collection.find({},{'oAuth':1})
-		document = yield cursor.to_list(length=10000)
-		for i in document:
+		cursor = self.db['pilots'].find({'esi_api':{'$exists':1}},{'esi_api.CharacterID':1,'esi_api.access_token':1,'esi_api.refresh_token':1})
+		documentList = yield cursor.to_list(length=10000)
 
-			url = 'https://esi.evetech.net/latest/characters/' + str(i['_id']) + '/location/?token=' + i['oAuth']['access_token'] 
-			chunk = { 'kwargs':{'method':'GET'} , 'url':url }
-			response = yield self.fe.asyncFetch(chunk)
-			if response.code == 200:
-				payload = json.loads(response.body.decode())
-				#logger.info( i['oAuth']['CharacterName'] + ':' + str(payload) )
-				result = yield self.db.pilots.update_one({'_id':i['_id']},{'$set':{'SSOlocation':payload}},upsert=True)
-			else:
-				self.refreshSSO(oAuth=i['oAuth'])
+		for document in documentList:
+				
+				esi_api = document['esi_api']
+
+				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/location/?token=' + esi_api['access_token']
+				chunk = { 'kwargs':{'method':'GET'} , 'url':url }
+				
+				response = yield self.fe.asyncFetch(chunk)
+				if response.code == 200:
+					payload = json.loads(response.body.decode())
+					result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'location':payload}})
+				else:
+					logger.warning('refresh_token:' + str(esi_api['CharacterID']))
+					self.refreshSSO(esi_api)
 
 	@gen.coroutine
 	def refreshSSO(self,oAuth=None):
 		
 		headers = {}
-		headers['Authorization'] = self.co.sso['authorization']
+		headers['Authorization'] = self.co.esi_api['authorization']
 		headers['Content-Type'] = 'application/x-www-form-urlencoded'
 		headers['Host'] = 'login.eveonline.com'
 		
@@ -80,8 +83,8 @@ class CronWorker(object):
 		
 		if response.code == 200:
 			payload = json.loads(response.body.decode())
-			#logger.info( oAuth['CharacterName'] + ':' + payload['access_token'])
-			result = yield self.db.pilots.update_one({'oAuth.refresh_token':oAuth['refresh_token']},{'$set':{'oAuth.access_token':payload['access_token']}},upsert=True)
+			result = yield self.db.pilots.update_one({'esi_api.refresh_token':oAuth['refresh_token']},{'$set':{'esi_api.access_token':payload['access_token']}},upsert=True)
+			
 			return payload['access_token']
 
 		else :

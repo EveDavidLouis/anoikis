@@ -39,21 +39,25 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		if self.token != '': 
 
-			document = yield db.pilots.find_one({'esi_login.access_token':self.token},{'esi_login':1,'Characters':1}) 	
+			esi_login = yield db['pilots'].find_one({'access_token':self.token},{'CharacterName':1,'CharacterID':1,'access_token':1}) 	
 	
-			if document and 'CharacterName' in document['esi_login']: 
+			if esi_login and 'CharacterName' in esi_login: 
 				
-				self.CharacterName = document['esi_login']['CharacterName']
-				self.CharacterID = document['esi_login']['CharacterID']
-				self.access_token = document['esi_login']['access_token']
-
-				if not 'Characters' in document: document['Characters'] = []
+				self.CharacterName = esi_login['CharacterName']
+				self.CharacterID = esi_login['CharacterID']
+				self.access_token = esi_login['access_token']
 
 				payload = {}
-				payload['pilot'] = document['esi_login']
-				payload['Characters'] = [{'CharacterID':i , 'CharacterName': document['Characters'][i]['CharacterName'] } for i in document['Characters'] ]
+				payload['pilot'] = esi_login
 				payload['esi_api'] = self.settings['co'].esi_api
 				payload['state'] = 'api'
+				payload['Characters'] = []
+
+				cursor = db['pilots'].find({'owner':self.CharacterID},{'esi_api.CharacterID':1,'esi_api.CharacterName':1,'location':1})
+				charList = yield cursor.to_list(length=10000)
+				if charList:
+					for char in charList:
+						payload['Characters'].append(char)
 
 				outbound = {'brand': self.render_string('brand.html',data=payload).decode("utf-8") 
 					,'main': self.render_string('addCharacter.html',data=payload).decode("utf-8") 
@@ -93,15 +97,16 @@ class SocketHandler(websocket.WebSocketHandler):
 
 			if inbound['state'] =='login':
 
-				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':{'esi_login':result}},upsert=True)
+				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':result},upsert=True)
 
 				outbound={'setCookie':{'name':'_id','value':result['access_token']}}
 				self.write_message(json.dumps(outbound))
 
 			if inbound['state'] =='api':
 
-				yield db.pilots.update_one({'esi_login.access_token':self.token},{'$set':{'Characters.'+str(result['CharacterID']):result}},upsert=True)
-
+#				yield db.pilots.update_one({'esi_login.access_token':self.token},{'$set':{'Characters.'+str(result['CharacterID']):result}},upsert=True)
+				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':{'esi_api':result,'owner':self.CharacterID}},upsert=True)
+				
 				outbound={'addCharacter':{'CharacterID':result['CharacterID'],'CharacterName':result['CharacterName']}}
 				self.write_message(json.dumps(outbound))
 

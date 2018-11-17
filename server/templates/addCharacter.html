@@ -2,7 +2,11 @@
 	<div class="row">
 		{% for i in data['Characters'] %}
 		<div class="col-sm-4 char">
-			<img alt="{{ i['CharacterName'] }}" src="https://image.eveonline.com/Character/{{i['CharacterID']}}_128.jpg">
+			<img alt="{{ i['esi_api']['CharacterName'] }}" src="https://image.eveonline.com/Character/{{i['esi_api']['CharacterID']}}_128.jpg">
+			<h2>{{ i['esi_api']['CharacterName'] }}</h2>
+			{% if 'location' in i %}
+			<p>{{ i['location']}}</p>
+			{% end %}
 		</div>
 		{% end %}
 	</div>	
