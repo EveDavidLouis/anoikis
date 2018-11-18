@@ -35,7 +35,7 @@ class SocketHandler(websocket.WebSocketHandler):
 		# self.callback = PeriodicCallback(lambda : self.cron(),10000)
 		# self.callback.start()
 
-		self.token = channel #self.get_cookie('_id')
+		self.token = channel
 
 		if self.token != '': 
 
@@ -52,17 +52,13 @@ class SocketHandler(websocket.WebSocketHandler):
 				payload['CharacterID'] = self.CharacterID
 				payload['Characters'] = []
 
-				cursor = db['pilots'].find({'owner':self.CharacterID},{'esi_api.CharacterID':1,'esi_api.CharacterName':1,'location':1})
+				cursor = db['pilots'].find({'owner':self.CharacterID},{'esi_api.CharacterID':1,'esi_api.CharacterName':1})
 				charList = yield cursor.to_list(length=10000)
 				if charList:
 					for char in charList:
 						payload['Characters'].append(char)
 
-				outbound = {'endPoint':'home'
-					,'data':payload
-					#,'brand': self.render_string('brand.html',data=payload).decode("utf-8") 
-					#,'main': self.render_string('addCharacter.html',data=payload).decode("utf-8") 
-					}
+				outbound = {'endPoint':'home','data':payload}
 
 			else:
 
@@ -70,9 +66,7 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		else :
 
-			payload = {'esi_login': self.settings['co'].esi_login}
-			if not 'state' in payload: payload['state'] = 'login'
-
+			payload = {'esi_login': self.settings['co'].esi_login ,'state':'login'}
 			outbound = {'endPoint':'welcome','data':self.render_string('login.html',data=payload).decode("utf-8") }
 
 		self.write_message(json.dumps(outbound))
@@ -102,13 +96,22 @@ class SocketHandler(websocket.WebSocketHandler):
 
 			if inbound['state'] =='api':
 
-#				yield db.pilots.update_one({'esi_login.access_token':self.token},{'$set':{'Characters.'+str(result['CharacterID']):result}},upsert=True)
 				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':{'esi_api':result,'owner':self.CharacterID}},upsert=True)
 				
 				outbound={'endPoint':'esi-api','data':{'CharacterID':result['CharacterID'],'CharacterName':result['CharacterName']}}
 				self.write_message(json.dumps(outbound))
 
-		if 'ownedCharacters' in inbound:
+		elif 'getCharacter' in inbound:
+
+			esi_api = yield db['pilots'].find_one({'esi_api.CharacterID':inbound['getCharacter'],'$or':[{'admin':1},{'owner':self.CharacterID}]},{'_id':0,'esi_api.CharacterName':1,'esi_api.CharacterID':1,'location':1}) 	
+			
+			if esi_api:
+				outbound = {'endPoint':'character', 'data':esi_api}
+			else :
+				outbound = {'endPoint':'error', 'data':'forbidden'}
+			self.write_message(json.dumps(outbound))
+
+		elif 'getCharacters' in inbound:
 
 			payload = {}
 			
@@ -123,9 +126,12 @@ class SocketHandler(websocket.WebSocketHandler):
 				for char in charList:
 					payload['characters'].append(char['esi_api'])
 
-			outbound = {'endPoint':'myCharacters', 'data':payload}
+			outbound = {'endPoint':'characters', 'data':payload}
 
 			self.write_message(json.dumps(outbound))
+
+		else:
+			self.write_message(json.dumps(inbound))
 
 		# outbound={}
 		# outbound['id'] = str(self.id)
