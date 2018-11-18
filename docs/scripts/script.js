@@ -70,7 +70,8 @@ function update(msg){
 		case 'home':	
 			$('#navbar').show();
 			$('#brand').html('<img src="https://image.eveonline.com/Character/'+ msg.data.CharacterID+'_64.jpg">'+msg.data.CharacterName);
-			$('#main-container').html(msg.data);
+			getCharacters();
+
 			break;
 		case 'esi-api':
 			window.location = window.location.origin;
