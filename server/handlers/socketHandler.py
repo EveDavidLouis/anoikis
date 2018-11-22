@@ -39,14 +39,14 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		if self.token != '': 
 
-			esi_login = yield db['pilots'].find_one({'access_token':self.token},{'CharacterName':1,'CharacterID':1,'access_token':1}) 	
-	
-			if esi_login and 'CharacterName' in esi_login: 
-				
-				self.CharacterName = esi_login['CharacterName']
-				self.CharacterID = esi_login['CharacterID']
-				self.access_token = esi_login['access_token']
+			result = yield db['pilots'].find_one({'esi_login.access_token':self.token},{'esi_login.CharacterName':1,'esi_login.CharacterID':1,'esi_login.access_token':1}) 	
 
+			if result and 'CharacterName' in result['esi_login']: 
+				
+				self.CharacterName = result['esi_login']['CharacterName']
+				self.CharacterID = result['esi_login']['CharacterID']
+				self.access_token = result['esi_login']['access_token']
+				
 				payload = {}
 				payload['CharacterName'] = self.CharacterName
 				payload['CharacterID'] = self.CharacterID
@@ -89,7 +89,7 @@ class SocketHandler(websocket.WebSocketHandler):
 
 			if inbound['state'] =='login':
 
-				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':result},upsert=True)
+				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':{'esi_login':result}},upsert=True)
 
 				outbound={'endPoint':'esi-login','data':{'name':'_id','value':result['access_token']}}
 				self.write_message(json.dumps(outbound))
@@ -103,28 +103,35 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		elif 'getCharacter' in inbound:
 
-			esi_api = yield db['pilots'].find_one({'esi_api.CharacterID':inbound['getCharacter'],'$or':[{'admin':1},{'owner':self.CharacterID}]},{'_id':0,'esi_api.CharacterName':1,'esi_api.CharacterID':1,'location':1}) 	
+			esi_api = yield db['pilots'].find_one({'esi_api.CharacterID':inbound['getCharacter'],'$or':[{'admin':{'$exists':1}},{'owner':self.CharacterID}]},{'_id':0,'esi_api.CharacterName':1,'esi_api.CharacterID':1,'corporationhistory':1,'stats':1,'standings':1,'wallet-journal':1,'owner':1,'location':1,'bookmarks':1,'bookmarks-folders':1}) 	
 			
 			if esi_api:
 				outbound = {'endPoint':'character', 'data':esi_api}
 			else :
-				outbound = {'endPoint':'error', 'data':'forbidden'}
+				outbound = {'error':' getCharacter forbidden'}
+
 			self.write_message(json.dumps(outbound))
 
 		elif 'getCharacters' in inbound:
 
 			payload = {}
 			
-			payload_link = {'esi_api': self.settings['co'].esi_api,'state':'api'}
-			payload['addCharacter'] = self.render_string('addCharacter.html',data=payload_link).decode("utf-8") 
+			esi_api = self.settings['co'].esi_api
+			#payload['addCharacter'] = self.render_string('addCharacter.html',data=payload_link).decode("utf-8") 
+			payload['url'] = 'https://login.eveonline.com/oauth/authorize/?response_type=code&redirect_uri=%s&scope=%s&client_id=%s&state=api' % (esi_api['callback'] ,esi_api['scope'],esi_api['clientId'])
 
-			payload['characters'] = []
+			payload['list'] = []
 
-			cursor = db['pilots'].find({'owner':self.CharacterID},{'_id':0,'esi_api.CharacterID':1,'esi_api.CharacterName':1})
+			if inbound['getCharacters'] == 'members' :
+				query = {'owner':self.CharacterID} #need to control if admin
+			else :
+				query = {'owner':self.CharacterID}
+
+			cursor = db['pilots'].find(query,{'_id':0,'esi_api.CharacterID':1,'esi_api.CharacterName':1})
 			charList = yield cursor.to_list(length=10000)
 			if charList:
 				for char in charList:
-					payload['characters'].append(char['esi_api'])
+					payload['list'].append(char['esi_api'])
 
 			outbound = {'endPoint':'characters', 'data':payload}
 
@@ -132,36 +139,6 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		else:
 			self.write_message(json.dumps(inbound))
-
-		# outbound={}
-		# outbound['id'] = str(self.id)
-		# outbound['channel'] = str(self.channel)
-		# outbound['inbound'] = inbound
-
-		# if 'c' in inbound:
-		# 	self.name = inbound['a']
-		# elif 'a' in inbound:
-		# 	self.name = inbound['a']
-		# elif 'w' in inbound:
-
-		# 	headers = {}
-		# 	body = ''
-
-		# 	url = 'https://esi.evetech.net/latest/ui/autopilot/waypoint/'
-		# 	url += '?add_to_beginning=' + str(True)
-		# 	url += '&clear_other_waypoints=' + str(True)
-		# 	url += '&destination_id=' + str(inbound['w']) #str(60009031)
-		# 	url += '&token=' + str(self.access_token)
-			
-		# 	request = {'kwargs':{'method':'POST','body':body,'headers':headers} ,'url':url}
-		# 	logger.warning(request)
-
-		# 	response = yield self.settings['fe'].asyncFetch(request)
-
-		# else:
-		# 	outbound = [ {'id':str(w.id),'name':w.name} for w in self.waiters]
-		# 	outbound = json.dumps(outbound)
-		# 	self.broadcast(outbound)
 
 	@gen.coroutine
 	def broadcast(self,inbound={}):

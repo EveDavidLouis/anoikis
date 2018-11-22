@@ -136,8 +136,7 @@ class QueueWorker():
 
 		
 		else:
-			
-			logger.warning(response.body)
+			logger.info(response.body)
 
 		# esi_api = yield db['pilots'].find_one({'esi_api.CharacterID':CharacterID},{'_id':0,'esi_api.CharacterName':1,'esi_api.Refresh_token':1})	
 		
@@ -162,7 +161,7 @@ class CronWorker(object):
 		documentList = yield cursor.to_list(length=10000)
 		
 		for document in documentList:
-			yield self.qe.refreshCharacter(document['esi_api'])
+			self.qe.refreshCharacter(document['esi_api'])
 
 	@gen.coroutine
 	def run(self):

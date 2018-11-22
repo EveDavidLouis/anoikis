@@ -2,7 +2,7 @@ import os
 import logging
 import json
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger('app')
 
 from tornado import ioloop , gen , web
@@ -22,8 +22,8 @@ class Application(web.Application):
 			(r"/market/(.*)"	,webHandler.MarketHandler),
 			(r"/tripwire"		,webHandler.TripwireHandler),
 			(r"/system/(.*)"	,webHandler.SystemHandler),
-			(r"/(.*)"			,webHandler.DefaultHandler),
-			(r""				, webHandler.DefaultHandler),
+			(r"/(.*)"			,web.StaticFileHandler, {"path": "docs/index.html"}),
+			(r""				,web.StaticFileHandler, {"path": "docs/index.html"}),
 		]
 		settings = dict(	
 			cookie_secret=config.server['secret'],
@@ -49,8 +49,8 @@ if __name__ == "__main__":
 	ws = app.wildcard_router.named_rules['wsi'].target
 
 	#workers
-	qe = jobHandler.QueueWorker(db=db,fe=fe,ws=ws)
-	cr = jobHandler.CronWorker(db=db,fe=fe,ws=ws,co=config)
+	qe = jobHandler.QueueWorker(db=db,fe=fe,ws=ws,co=config)
+	cr = jobHandler.CronWorker(db=db,fe=fe,ws=ws,co=config,qe=qe)
 
 	#settings
 	app.settings['co'] = config
@@ -60,8 +60,8 @@ if __name__ == "__main__":
 	app.listen(config.server['port'],config.server['host'])
 	
 	#cronWorker
-	cron = ioloop.PeriodicCallback(lambda : cr.run(),10000)
-	cron.start()
+	cron = ioloop.PeriodicCallback(lambda : cr.refresh_api(),1*60*1000)
+	cron.start()	
 
 	#queueWorker
 	ioloop.IOLoop.instance().run_sync(qe.run)

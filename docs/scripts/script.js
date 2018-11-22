@@ -1,5 +1,4 @@
-var connection;
-var i;
+var connection
 
 function openSocket(){
 
@@ -8,23 +7,23 @@ function openSocket(){
 		host = 'ws://'+ window.location.host
 	};
 
-	$('.loader').show();
+	$('.loader').show()
 	
-	connection = new WebSocket(host+'/esi/'+ getCookie('_id'));
+	connection = new WebSocket(host+'/esi/'+ getCookie('_id'))
 
 	connection.onerror = function (event) {
 		
-		$('.loader').show();
-		$('#brand').html('ESI-ERROR');		
-		connection.close();
+		$('.loader').show()
+		$('#brand').html('ESI-ERROR')	
+		connection.close()
 	};
 
 	connection.onclose = function (event) {
 				
-		$('.loader').show();
-		$('#brand').html('ESI-OFFLINE');
+		$('.loader').show()
+		$('#brand').html('ESI-OFFLINE')
 
-		setTimeout(openSocket, 500);
+		setTimeout(openSocket, 500)
 
 	};
 
@@ -33,25 +32,31 @@ function openSocket(){
 		$('.loader').hide();
 		$('#brand').html('ESI-ONLINE');
 
-		_url = new URL(window.location.href);
-		_code = _url.searchParams.get("code");
-		_state = _url.searchParams.get("state");
+		_url = new URL(window.location.href)
+		_code = _url.searchParams.get('code')
+		_state = _url.searchParams.get('state')
 		if (_code != null && _state != null){
-			connection.send(JSON.stringify({'code': _code,'state': _state}));
+			connection.send(JSON.stringify({'code': _code,'state': _state}))
 		}
 		
 	};
 
 	connection.onmessage = function (event) {
 		
-		data = JSON.parse(event.data);
+		msg = JSON.parse(event.data)
+		if ('endPoint' in msg){
+			
+			app['endpoint'] = msg.endPoint
+			app[msg.endPoint] = msg.data
+			update(msg)
 
-		if ('endPoint' in data){
-			update(data);
+		} else if ('error' in msg) {
+			console.warn(msg)
 		} else {
-			console.warn('NO ENDPOINT');
-			console.warn(msg);
+			console.warn('NO ENDPOINT')
+			console.warn(msg)
 		}
+
 	};
 
 }
@@ -64,93 +69,38 @@ function update(msg){
 			window.location = window.location.origin;
 			break;
 		case 'welcome':
-			$('#main-container').html(msg.data);
 			$('#navbar').hide();
 			break;
 		case 'home':	
 			$('#navbar').show();
 			$('#brand').html('<img src="https://image.eveonline.com/Character/'+ msg.data.CharacterID+'_64.jpg">'+msg.data.CharacterName);
-			getCharacters();
-
+			getCharacters('owner');
 			break;
 		case 'esi-api':
 			window.location = window.location.origin;
 			break;
 		case 'characters':
-			characters(msg);
 			break;
 		case 'character':
-			character(msg);
 			break;
 		default:
 			window.alert(JSON.stringify(msg));
 			console.warn(msg);
 	}
-
-	// if (msg.endPoint == 'login'){
-	// 	$('#main-container').html(msg.login);
-	// 	$('#navbar').hide();
-	// }
-
-	// if ('brand' in msg){
-	// 	$('#brand').html('<img src="https://image.eveonline.com/Character/'++'_64.jpg">'+);
-	// 	$('#navbar').show();
-	// }
-
-	// if ('main' in msg){
-	// 	$('#main-container').html(msg.main);
-	// }
-	
-	// if ('setCookie' in msg){
-	// 	setCookie(msg.setCookie.name,msg.setCookie.value,7);
-	// 	window.location = window.location.origin;
-	// }
-
-	// if ('addCharacter' in msg){
-	// 	window.location = window.location.origin;
-	// }
-}
-function character(msg){
-
-	var container = d3.select("#main-container").html(JSON.stringify(msg.data));
-	
 }
 
-function characters(msg){
-
-	var container = d3.select("#main-container").html('');
-
-	var characters = container.append("div").attr("class", "row");
-	var addCharacter = container.append("div").attr("class", "row");
-
-	var character = characters.selectAll("div")
-		.data(msg.data.characters)
-		.enter()
-		.append("div").attr("class", "col character")
-			
-	character
-		.append("a")
-			.attr("href", function(d){return 'javascript:getCharacter('+ d.CharacterID +')'})
-		.append("img")
-		.attr("src", function(d){return 'https://image.eveonline.com/Character/'+ d.CharacterID +'_128.jpg'})
-		.attr("title", function(d){return d.CharacterName});
-
-	addCharacter.append("div").attr("class", "col-12 addCharacter")
-		.html(msg.data.addCharacter);
-
-}
 
 function setCookie(name,value,days) {
-	var expires = "";
+	var expires = '';
 	if (days) {
 		var date = new Date();
 		date.setTime(date.getTime() + (days*24*60*60*1000));
-		expires = "; expires=" + date.toUTCString();
+		expires = '; expires=' + date.toUTCString();
 	}
-	document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+	document.cookie = name + '=' + (value || '')  + expires + '; path=/';
 }
 function getCookie(name) {
-	var nameEQ = name + "=";
+	var nameEQ = name + '=';
 	var ca = document.cookie.split(';');
 	for(var i=0;i < ca.length;i++) {
 		var c = ca[i];
@@ -169,8 +119,8 @@ function logout() {
 	location.reload();
 }
 
-function getCharacters() {
-	connection.send(JSON.stringify({'getCharacters': 'owned'}));
+function getCharacters(type='owner') {
+	connection.send(JSON.stringify({'getCharacters': type}));
 }
 
 function getCharacter(characterID) {
@@ -178,6 +128,5 @@ function getCharacter(characterID) {
 }
 
 $(document).ready(function(){
-	i = 0;
 	openSocket();
 });
