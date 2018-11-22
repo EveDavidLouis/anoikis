@@ -32,7 +32,7 @@
 					<span class="navbar-toggler-icon"></span>
 				</button>
 				
-				<div class="collapse navbar-collapse" id="navbar">
+				<div v-if="endpoint!=='welcome'" class="collapse navbar-collapse" id="navbar">
 					
 					<form class="form-inline my-2 my-lg-0">
 						<input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
@@ -97,9 +97,6 @@
 						</li>
 						<li class="nav-item">
 						<a class="nav-link" id="wallet-tab" data-toggle="pill" href="#wallet" role="tab" aria-controls="contact" aria-selected="false">Wallet</a>
-						</li>
-						<li class="nav-item">
-						<a class="nav-link" id="wallet-tab" data-toggle="pill" href="#stats" role="tab" aria-controls="contact" aria-selected="false">Stats</a>
 						</li>
 					</ul>
 

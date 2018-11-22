@@ -129,8 +129,11 @@ class QueueWorker():
 				for response in responses:
 					if response.code == 200:
 						result[response.request.headers['folder']] = json.loads(response.body.decode())
+
+					elif response.code == 503:
+						return None
 					else:
-						logger.warning(response.code)
+						logger.warning(str(response.code) + ':' + response.body.decode())
 				
 				yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':result})
 
