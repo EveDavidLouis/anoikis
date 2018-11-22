@@ -29,11 +29,21 @@ pre {
 	margin-left: 5px;
 }
 
+th {
+	min-width: 150px;
+}
+
 .main-container {
 
 	padding: 0;
-	margin: 0;
+	margin: 0 auto;
 	margin-top: 60px;
+}
+
+@media (min-width: 1600px){
+	.container {
+		max-width: 1600px;
+	}
 }
 
 .welcome-container , .characters-container , .character-container {

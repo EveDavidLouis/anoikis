@@ -139,7 +139,7 @@ Vue.component('bookmarks', {
 		<div class="col-lg-12">
 			<div v-for="(folder,folder_id) in bookmarkMap" class="card">
 				<div class="card-header collapes" :data-target="'#'+folder_id" data-toggle="collapse" aria-expanded="false">
-					<h5 class="mb-0">{{folder.name}}</h5>
+					<h5 class="mb-0">{{folder.name}}</h5> <span class="badge badge-primary badge-pill"></span>
 				</div>
 				<div :id="folder_id" class="collapse">
 					<div v-for="bm in folder.bookmarks" class="card-body p-0">
@@ -191,12 +191,12 @@ Vue.component('walletdetails', {
 	props: ['data'],
 	template: `
 		<tr>
-			<th scope="col">{{data.date}}</th>
-			<th scope="col">{{balance}}</th>
-			<th scope="col">{{amount}}</th>
-			<th scope="col">{{data.ref_type}}</th>	
-			<th scope="col">{{data.description}}</th>
-			<th scope="col">{{data.reason}}</th>
+			<th v-bind:class="indicator">{{date}}</th>
+			<th v-bind:class="indicator">{{balance}}</th>
+			<th v-bind:class="indicator">{{amount}}</th>
+			<th v-bind:class="indicator">{{data.ref_type}}</th>	
+			<th v-bind:class="indicator">{{data.description}}</th>
+			<th v-bind:class="indicator">{{data.reason}}</th>
 		</tr>
 	`,
 	computed: {
@@ -205,6 +205,23 @@ Vue.component('walletdetails', {
 		},
 		amount: function () {
 			return (this.data.amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')
+		},
+		indicator: function () {
+			
+			switch (true){
+				case (Math.abs(this.data.amount) < 100000000):
+					return ""
+					break
+				case (Math.abs(this.data.amount) < 1000000000):
+					return "table-warning"
+					break
+				default:
+					return "table-danger"
+					break
+			}
+		},
+		date: function () {
+			return new Date(this.data.date).toISOString().slice(0,10)
 		}
 	}
 })
@@ -214,15 +231,15 @@ Vue.component('wallet', {
 	template: `
 	<div class="row">
 		<div class="col-lg-12">
-		<table class="table table-bordered table-stripped">
-			<thead>
+		<table class="table table-striped table-hover table-bordered table-sm" id="wallet">
+			<thead class="table-dark">
 				<tr>
-					<th scope="col">date</th>
-					<th scope="col">balance</th>
-					<th scope="col">amount</th>
-					<th scope="col">ref_type</th>	
-					<th scope="col">description</th>
-					<th scope="col">reason</th>
+					<th>date</th>
+					<th>balance</th>
+					<th>amount</th>
+					<th>ref_type</th>	
+					<th>description</th>
+					<th>reason</th>
 				</tr>
 			</thead>
 			<tbody>
