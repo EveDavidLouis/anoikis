@@ -49,7 +49,7 @@ function openSocket(){
 			app['endpoint'] = msg.endPoint
 			app[msg.endPoint] = msg.data
 			update(msg)
-
+		} else if ('ping' in msg) {
 		} else if ('error' in msg) {
 			console.warn(msg)
 		} else {

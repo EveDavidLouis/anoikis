@@ -21,7 +21,7 @@ class SocketHandler(websocket.WebSocketHandler):
 
 	@gen.coroutine
 	def cron(self):
-		outbound = {'id':str(self.id),'ping':1}
+		outbound = {'ping':1}
 		self.write_message(json.dumps(outbound))
 
 	@gen.coroutine
@@ -32,8 +32,10 @@ class SocketHandler(websocket.WebSocketHandler):
 		self.id = uuid.uuid4()
 
 		SocketHandler.waiters.add(self)
-		# self.callback = PeriodicCallback(lambda : self.cron(),10000)
-		# self.callback.start()
+
+		#ping
+		self.callback = PeriodicCallback(lambda : self.cron(),30*1000)
+		self.callback.start()
 
 		self.token = channel
 
@@ -74,6 +76,7 @@ class SocketHandler(websocket.WebSocketHandler):
 	@gen.coroutine
 	def on_close(self):
 
+		self.callback.stop()
 		SocketHandler.waiters.remove(self)
 
 	@gen.coroutine
