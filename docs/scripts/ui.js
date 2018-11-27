@@ -191,12 +191,12 @@ Vue.component('walletdetails', {
 	props: ['data'],
 	template: `
 		<tr>
-			<th v-bind:class="indicator">{{date}}</th>
-			<th v-bind:class="indicator">{{balance}}</th>
-			<th v-bind:class="indicator">{{amount}}</th>
-			<th v-bind:class="indicator">{{data.ref_type}}</th>	
-			<th v-bind:class="indicator">{{data.description}}</th>
-			<th v-bind:class="indicator">{{data.reason}}</th>
+			<td v-bind:class="indicator">{{date}}</th>
+			<td v-bind:class="indicator">{{balance}}</th>
+			<td v-bind:class="indicator">{{amount}}</th>
+			<td v-bind:class="indicator">{{data.ref_type}}</th>	
+			<td v-bind:class="indicator">{{data.description}}</th>
+			<td v-bind:class="indicator">{{data.reason}}</th>
 		</tr>
 	`,
 	computed: {
@@ -245,6 +245,79 @@ Vue.component('wallet', {
 			<tbody>
 				<walletdetails v-for="item in data['wallet-journal']" :key="item.id" v-bind:data="item">
 				</walletdetails>
+			</tbody>
+		</table>
+		</div>
+	</div>
+	`
+})
+
+//++++++++++++++++++++
+// TRANSACTIONS
+//++++++++++++++++++++
+Vue.component('transactionsdetails', {
+	props: ['data'],
+	template: `
+		<tr>
+			<td v-bind:class="indicator">{{date}}</th>
+			<td v-bind:class="indicator">{{data.location_id}}</th>
+			<td v-bind:class="indicator">{{data.client_id}}</th>
+			<td v-bind:class="indicator">{{data.type_id}}</th>
+			<td v-bind:class="indicator">{{qty}}</th>
+			<td v-bind:class="indicator">{{up}}</th>
+			<td v-bind:class="indicator">{{amount}}</th>
+		</tr>
+	`,
+	computed: {
+		up: function () {
+			return (this.data.unit_price).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')
+		},
+		qty: function () {
+			return (this.data.quantity).toFixed(0).replace(/\d(?=(\d{3})+\.)/g, '$&,')
+		},
+		amount: function () {
+			return (this.data.unit_price * this.data.quantity).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')
+		},
+		indicator: function () {
+			
+			switch (true){
+				case (Math.abs(this.data.unit_price * this.data.quantity) < 100000000):
+					return ""
+					break
+				case (Math.abs(this.data.unit_price * this.data.quantity) < 1000000000):
+					return "table-warning"
+					break
+				default:
+					return "table-danger"
+					break
+			}
+		},
+		date: function () {
+			return new Date(this.data.date).toISOString().slice(0,10)
+		}
+	}
+})
+
+Vue.component('transactions', {
+	props: ['data'],
+	template: `
+	<div class="row">
+		<div class="col-lg-12">
+		<table class="table table-striped table-hover table-bordered table-sm" id="transactions">
+			<thead class="table-dark">
+				<tr>
+					<th>Date</th>
+					<th>Location</th>
+					<th>Client</th>
+					<th>Item</th>
+					<th>Quantity</th>
+					<th>Unit price</th>
+					<th>Total Value</th>
+				</tr>
+			</thead>
+			<tbody>
+				<transactionsdetails v-for="item in data['wallet-transactions']" :key="item.id" v-bind:data="item">
+				</transactionsdetails>
 			</tbody>
 		</table>
 		</div>

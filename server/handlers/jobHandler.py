@@ -114,6 +114,11 @@ class QueueWorker():
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
+				headers = {'folder':'wallet-transactions'}
+				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/wallet/transactions/?token=' + esi_api['access_token']
+				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
+				requests.append(chunk)
+
 				headers = {'folder':'standings'}
 				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/standings/?token=' + esi_api['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
@@ -165,6 +170,7 @@ class CronWorker(object):
 		documentList = yield cursor.to_list(length=10000)
 		
 		for document in documentList:
+			logger.warning('refresh_api')
 			yield self.qe.refreshCharacter(document['esi_api'])
 
 	@gen.coroutine

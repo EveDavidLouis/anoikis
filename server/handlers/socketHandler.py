@@ -106,7 +106,7 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		elif 'getCharacter' in inbound:
 
-			esi_api = yield db['pilots'].find_one({'esi_api.CharacterID':inbound['getCharacter'],'$or':[{'admin':{'$exists':1}},{'owner':self.CharacterID}]},{'_id':0,'esi_api.CharacterName':1,'esi_api.CharacterID':1,'corporationhistory':1,'stats':1,'standings':1,'wallet-journal':1,'owner':1,'location':1,'bookmarks':1,'bookmarks-folders':1}) 	
+			esi_api = yield db['pilots'].find_one({'esi_api.CharacterID':inbound['getCharacter'],'$or':[{'admin':{'$exists':1}},{'owner':self.CharacterID}]},{'_id':0,'esi_api.CharacterName':1,'esi_api.CharacterID':1,'corporationhistory':1,'stats':1,'standings':1,'wallet-journal':1,'wallet-transactions':1,'owner':1,'location':1,'bookmarks':1,'bookmarks-folders':1}) 	
 			
 			if esi_api:
 				outbound = {'endPoint':'character', 'data':esi_api}

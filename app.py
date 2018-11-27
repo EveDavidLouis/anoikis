@@ -39,7 +39,7 @@ class Application(web.Application):
 
 if __name__ == "__main__":
 
-	logger.info(config.server['host'] + ':' + str(config.server['port']))
+	logger.warning(config.server['host'] + ':' + str(config.server['port']))
 
 	#application
 	app = Application()
