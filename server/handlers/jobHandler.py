@@ -59,7 +59,7 @@ class QueueWorker():
 
 	@gen.coroutine
 	def refreshCharacter(self,esi_api=None):
-							
+
 		headers = {}
 		headers['Authorization'] = self.co.esi_api['authorization']
 		headers['Content-Type'] = 'application/x-www-form-urlencoded'
@@ -126,6 +126,11 @@ class QueueWorker():
 
 				headers = {'folder':'stats'}
 				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/stats/?token=' + esi_api['access_token']
+				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
+				requests.append(chunk)
+
+				headers = {'folder':'industry-jobs'}
+				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/industry/jobs/?token=' + esi_api['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 

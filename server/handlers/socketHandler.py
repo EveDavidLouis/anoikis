@@ -85,6 +85,7 @@ class SocketHandler(websocket.WebSocketHandler):
 		inbound = json.loads(inbound)
 		
 		db = self.settings['db']
+		qe = self.settings['qe']
 
 		if 'code' in inbound and 'state' in inbound:
 
@@ -101,6 +102,8 @@ class SocketHandler(websocket.WebSocketHandler):
 
 				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':{'esi_api':result,'owner':self.CharacterID}},upsert=True)
 				
+				qe.refreshCharacter(result)
+
 				outbound={'endPoint':'esi-api','data':{'CharacterID':result['CharacterID'],'CharacterName':result['CharacterName']}}
 				self.write_message(json.dumps(outbound))
 
