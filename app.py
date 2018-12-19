@@ -2,7 +2,7 @@ import os
 import logging
 import json
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('app')
 
 from tornado import ioloop , gen , web

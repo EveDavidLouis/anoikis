@@ -40,7 +40,13 @@
 		var _url = new URL(window.location.href);
 		var _id = _url.searchParams.get("id") || '';
 
-		$.getJSON('https://space-anoikis.193b.starter-ca-central-1.openshiftapps.com/market/' + _id, function(data) {
+
+		var host = 'https://esi-online.herokuapp.com'
+		if (window.location.hostname == '0.0.0.0' || window.location.hostname == 'localhost'){
+			host = 'http://'+ window.location.host
+		};
+
+		$.getJSON(host + '/market/' + _id, function(data) {
 			data = data.sort(function(a,b) {
 					return (a.price > b.price) ? 1 : ((b.price > a.price) ? -1 : 0)
 				} );
