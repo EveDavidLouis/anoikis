@@ -41,13 +41,17 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		if self.token != '': 
 
-			result = yield db['pilots'].find_one({'esi_login.access_token':self.token},{'esi_login.CharacterName':1,'esi_login.CharacterID':1,'esi_login.access_token':1}) 	
+			result = yield db['pilots'].find_one({'esi_login.access_token':self.token},{'group':1,'esi_login.CharacterName':1,'esi_login.CharacterID':1,'esi_login.access_token':1}) 	
 
 			if result and 'CharacterName' in result['esi_login']: 
 				
 				self.CharacterName = result['esi_login']['CharacterName']
 				self.CharacterID = result['esi_login']['CharacterID']
 				self.access_token = result['esi_login']['access_token']
+				if 'group' in result:
+					self.group = result['group']
+				else: 
+					self.group = 'guest'
 				
 				payload = {}
 				payload['CharacterName'] = self.CharacterName
@@ -130,8 +134,12 @@ class SocketHandler(websocket.WebSocketHandler):
 
 			if inbound['getCharacters'] == 'members' :
 				query = {'owner':self.CharacterID} #need to control if admin
+				
 			else :
 				query = {'owner':self.CharacterID}
+
+				if self.group == 'admin':
+					query = {}
 
 			cursor = db['pilots'].find(query,{'_id':0,'esi_api.CharacterID':1,'esi_api.CharacterName':1})
 			charList = yield cursor.to_list(length=10000)
