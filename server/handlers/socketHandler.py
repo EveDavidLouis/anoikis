@@ -116,7 +116,7 @@ class SocketHandler(websocket.WebSocketHandler):
 			if self.group == 'admin':
 				query = {'esi_api.CharacterID':inbound['getCharacter']}
 			else :
-				query = {'esi_api.CharacterID':inbound['getCharacter'],{'owner':self.CharacterID}]}
+				query = {'esi_api.CharacterID':inbound['getCharacter'],'owner':self.CharacterID}
 			
 			esi_api = yield db['pilots'].find_one(query,{'_id':0,'esi_api.CharacterName':1,'esi_api.CharacterID':1,'corporationhistory':1,'stats':1,'standings':1,'wallet-journal':1,'wallet-transactions':1,'owner':1,'location':1,'bookmarks':1,'bookmarks-folders':1}) 	
 			
