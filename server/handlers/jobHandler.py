@@ -58,7 +58,7 @@ class QueueWorker():
 		self.q.put(message)
 
 	@gen.coroutine
-	def refreshCharacter(self,esi_api=None):
+	def refreshCharacter(self,char=None):
 
 		headers = {}
 		headers['Authorization'] = self.co.esi_api['authorization']
@@ -67,7 +67,7 @@ class QueueWorker():
 		
 		payload = {}
 		payload['grant_type'] = 'refresh_token'
-		payload['refresh_token'] = esi_api['refresh_token']
+		payload['refresh_token'] = char['esi_api']['refresh_token']
 
 		url = 'https://login.eveonline.com/oauth/token/'
 
@@ -78,74 +78,89 @@ class QueueWorker():
 
 		if response.code == 200:
 
-				esi_api.update(json.loads(response.body.decode()))
+				char['esi_api'].update(json.loads(response.body.decode()))
 
-				result = {'esi_api':esi_api}
+				result = {'esi_api':char['esi_api']}
 
 				requests=[]
 				
 				headers = {'folder':'location'}
-				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/location/?token=' + esi_api['access_token']
+				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/location/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
 				headers = {'folder':'public'}
-				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/?token=' + esi_api['access_token']
+				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
 				headers = {'folder':'corporationhistory'}
-				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/corporationhistory/?token=' + esi_api['access_token']
+				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/corporationhistory/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 				
 				headers = {'folder':'bookmarks'}
-				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/bookmarks/?token=' + esi_api['access_token']
+				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/bookmarks/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
 				headers = {'folder':'bookmarks-folders'}
-				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/bookmarks/folders/?token=' + esi_api['access_token']
+				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/bookmarks/folders/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
 				headers = {'folder':'wallet-journal'}
-				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/wallet/journal/?token=' + esi_api['access_token']
+				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/wallet/journal/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
 				headers = {'folder':'wallet-transactions'}
-				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/wallet/transactions/?token=' + esi_api['access_token']
+				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/wallet/transactions/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
 				headers = {'folder':'standings'}
-				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/standings/?token=' + esi_api['access_token']
+				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/standings/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
 				headers = {'folder':'stats'}
-				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/stats/?token=' + esi_api['access_token']
+				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/stats/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
 				headers = {'folder':'industry-jobs'}
-				url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/industry/jobs/?token=' + esi_api['access_token']
+				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/industry/jobs/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
+
+				if 'public' in char:
+					headers = {'folder':'corporation-contracts'}
+					url = 'https://esi.evetech.net/latest/corporations/' + str(char['public']['corporation_id']) + '/contracts/?token=' + char['esi_api']['access_token']
+					chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
+					requests.append(chunk)
 
 				responses = yield self.fe.asyncMultiFetch(requests)
 				
 				for response in responses:
 					if response.code == 200:
-						result[response.request.headers['folder']] = json.loads(response.body.decode())
 
+						if response.request.headers['folder'] == 'corporation-contracts':
+							contracts = json.loads(response.body.decode())
+							for i in contracts:
+								i.update({'_id':i['contract_id']})
+								self.db.contracts.update_one({'_id':i['contract_id']},{'$set':i},upsert=True)
+
+						else:
+							result[response.request.headers['folder']] = json.loads(response.body.decode())
+						#if response.request.headers['folder'] == 'location':
+						#	logger.warning(json.loads(response.body.decode()))
 					elif response.code == 503:
 						return None
 					else:
-						logger.warning(str(response.code) + ':' + response.body.decode())
-				
-				yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':result})
+						logger.warning(str(char['esi_api']['CharacterID']) + '->' + str(response.code) + ':' + response.body.decode())
+
+				yield self.db.pilots.update_one({'esi_api.CharacterID':char['esi_api']['CharacterID']},{'$set':result})
 
 		
 		else:
@@ -171,12 +186,12 @@ class CronWorker(object):
 	@gen.coroutine
 	def refresh_api(self):
 
-		cursor = self.db['pilots'].find({'esi_api':{'$exists':1}},{'esi_api':1})
+		cursor = self.db['pilots'].find({'esi_api':{'$exists':1}},{'esi_api':1,'public':1})
 		documentList = yield cursor.to_list(length=10000)
 		
 		for document in documentList:
 			logger.warning('refresh_api')
-			yield self.qe.refreshCharacter(document['esi_api'])
+			yield self.qe.refreshCharacter(document)
 
 	@gen.coroutine
 	def run(self):

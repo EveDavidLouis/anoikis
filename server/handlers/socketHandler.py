@@ -179,7 +179,7 @@ class SocketHandler(websocket.WebSocketHandler):
 		co = self.settings['co']
 
 		headers = {}
-		
+
 		if state == 'api':
 			headers['Authorization'] = co.esi_api['authorization']
 		else:
@@ -198,7 +198,7 @@ class SocketHandler(websocket.WebSocketHandler):
 
 		chunk = { 'kwargs':{'method':'POST' , 'body':body , 'headers':headers } , 'url':url }
 		response = yield fe.asyncFetch(chunk)
-
+	
 		if response.code == 200:
 			
 			payload = json.loads(response.body.decode())

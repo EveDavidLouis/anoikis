@@ -158,6 +158,17 @@ class SystemHandler(web.RequestHandler):
 		self.write(json.dumps(document))
 		self.finish()	
 
+class ContractHandler(web.RequestHandler):
+	@gen.coroutine
+	def get(self):
+
+		collection = self.settings['db']['contracts']
+		cursor = collection.find({})
+		document = yield cursor.to_list(length=1000)
+
+		self.write(json.dumps(document))
+		self.finish()	
+
 class TestFetch(web.RequestHandler):
 	@gen.coroutine
 	def get(self,args):

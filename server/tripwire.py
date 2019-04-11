@@ -15,7 +15,7 @@ class Tripwire:
 	@gen.coroutine
 	def asyncFetch(self,request):
 
-		response = yield self.session.fetch(request['url'],None,raise_error=False,**request['kwargs'])
+		response = yield self.session.fetch(request['url'],validate_cert=False,raise_error=False,**request['kwargs'])
 		return response 
 
 	def __init__(self,tripwireUsername=None,tripwirePassword=None,maskList={}):

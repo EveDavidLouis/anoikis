@@ -2,7 +2,6 @@ import os
 import logging
 import json
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('app')
 
 from tornado import ioloop , gen , web
@@ -21,6 +20,7 @@ class Application(web.Application):
 			(r"/esi/(.*)"		,socketHandler.SocketHandler , {},"wsi"),
 			(r"/market/(.*)"	,webHandler.MarketHandler),
 			(r"/tripwire"		,webHandler.TripwireHandler),
+			(r"/contract"		,webHandler.ContractHandler),
 			(r"/system/(.*)"	,webHandler.SystemHandler),
 			(r"/index.html"		,web.StaticFileHandler, {"path": "docs/index.html"}),
 			(r"/(.*)"			,web.StaticFileHandler, {"path": "docs/index.html"}),
@@ -61,6 +61,7 @@ if __name__ == "__main__":
 	app.listen(config.server['port'],config.server['host'])
 	
 	#cronWorker
+	cr.refresh_api()
 	cron = ioloop.PeriodicCallback(lambda : cr.refresh_api(),15*60*1000)
 	cron.start()
 
