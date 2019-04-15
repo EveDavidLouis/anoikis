@@ -158,7 +158,7 @@ class SystemHandler(web.RequestHandler):
 		self.write(json.dumps(document))
 		self.finish()	
 
-class ContractHandler(web.RequestHandler):
+class ContractsHandler(web.RequestHandler):
 	@gen.coroutine
 	def get(self):
 
