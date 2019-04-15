@@ -184,7 +184,7 @@ class QueueWorker():
 			chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 			requests.append(chunk)
 		else:
-			logger.warning(contract)
+			logger.warning('QueueWorker.refreshContract:no token')
 
 		responses = yield self.fe.asyncMultiFetch(requests)
 				
@@ -205,10 +205,12 @@ class CronWorker(object):
 		self.db = db
 		self.co = co
 		self.qe = qe
-		
+
 	@gen.coroutine
 	def refreshSSO(self,oAuth=None):
 		
+		logger.info('CronWorker.refreshSSO')
+
 		headers = {}
 		headers['Authorization'] = self.co.esi_api['authorization']
 		headers['Content-Type'] = 'application/x-www-form-urlencoded'
@@ -237,6 +239,8 @@ class CronWorker(object):
 	@gen.coroutine
 	def refresh_api(self):
 
+		logger.info('CronWorker.refresh_api')
+
 		cursor = self.db['pilots'].find({'esi_api':{'$exists':1}},{'esi_api':1,'public':1})
 		documentList = yield cursor.to_list(length=1000)
 		
@@ -247,6 +251,8 @@ class CronWorker(object):
 
 	@gen.coroutine
 	def refresh_contracts(self):
+
+		logger.info('CronWorker.refresh_contracts')
 
 		cursor = self.db['contracts'].find({'items':{'$exists':0}})
 		documentList = yield cursor.to_list(length=1000)
