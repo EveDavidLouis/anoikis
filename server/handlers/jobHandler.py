@@ -89,7 +89,7 @@ class QueueWorker():
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
-				headers = {'folder':'public'}
+				# headers = {'folder':'public'}
 				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
@@ -135,7 +135,7 @@ class QueueWorker():
 				requests.append(chunk)
 
 				if 'public' in char:
-					headers = {'folder':'corporation-contracts'}
+					headers = {'folder':'corporation-contracts','corporation_id':str(char['public']['corporation_id']),'token':char['esi_api']['access_token']}
 					url = 'https://esi.evetech.net/latest/corporations/' + str(char['public']['corporation_id']) + '/contracts/?token=' + char['esi_api']['access_token']
 					chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 					requests.append(chunk)
@@ -148,8 +148,9 @@ class QueueWorker():
 						if response.request.headers['folder'] == 'corporation-contracts':
 							contracts = json.loads(response.body.decode())
 							for i in contracts:
-								i.update({'_id':i['contract_id']})
-								self.db.contracts.update_one({'_id':i['contract_id']},{'$set':i},upsert=True)
+								if i['status'] != 'deleted' :
+									i.update({'_id':i['contract_id'],'token':response.request.headers['token'],'corporation_id':response.request.headers['corporation_id']})
+									self.db.contracts.update_one({'_id':i['contract_id']},{'$set':i},upsert=True)
 
 						else:
 							result[response.request.headers['folder']] = json.loads(response.body.decode())
@@ -172,6 +173,28 @@ class QueueWorker():
 		# if esi_api:
 		# 	pass
 
+	@gen.coroutine
+	def refreshContract(self,contract=None):
+
+		requests=[]
+
+		if 'token' in contract :			
+			headers = {'contract_id':str(contract['contract_id'])}
+			url = 'https://esi.evetech.net/latest/corporations/' + str(contract['corporation_id']) +'/contracts/'+str(contract['_id'])+'/items/?token=' + str(contract['token'])
+			chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
+			requests.append(chunk)
+		else:
+			logger.warning(contract)
+
+		responses = yield self.fe.asyncMultiFetch(requests)
+				
+		for response in responses:
+			if response.code == 200:
+				i = json.loads(response.body.decode())
+				self.db.contracts.update_one({'_id':int(response.request.headers['contract_id'])},{'$set':{'items':i}},upsert=True)
+
+			else:
+				logger.info(response.request.headers['contract_id'] + '->' + str(response.code) + ':' + response.body.decode())
 
 class CronWorker(object):
 	
@@ -182,152 +205,7 @@ class CronWorker(object):
 		self.db = db
 		self.co = co
 		self.qe = qe
-	
-	@gen.coroutine
-	def refresh_api(self):
-
-		cursor = self.db['pilots'].find({'esi_api':{'$exists':1}},{'esi_api':1,'public':1})
-		documentList = yield cursor.to_list(length=10000)
 		
-		for document in documentList:
-			logger.warning('refresh_api')
-			yield self.qe.refreshCharacter(document)
-
-	@gen.coroutine
-	def run(self):
-
-		# for i in self.ws.waiters:
-		# 	i.write_message({'clients':len(self.ws.waiters)})
-
-		cursor = self.db['pilots'].find({'esi_api':{'$exists':1},'esi_api.error':{'$exists':0}},{'esi_api.CharacterID':1,'esi_api.access_token':1,'esi_api.refresh_token':1})
-		documentList = yield cursor.to_list(length=10000)
-		
-		for document in documentList:
-				
-			esi_api = document['esi_api']
-			payload = {}
-
-			#--------------------------------------------------
-			url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/location/?token=' + esi_api['access_token']
-			chunk = { 'kwargs':{'method':'GET'} , 'url':url }
-			folder = 'location'
-
-			response = yield self.fe.asyncFetch(chunk)
-			if response.code == 200:
-				logger.info(folder +'OK')
-				payload[folder]=json.loads(response.body.decode())
-				result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':payload})
-
-			else:
-				error = json.loads(response.body.decode())
-				logger.warning(error)
-				if 'sso_status' in error and error['sso_status']==401:
-					logger.warning('REFRESH TOKEN')
-					self.refreshSSO(esi_api)
-				else:
-					logger.warning(folder +'ERROR')
-					logger.warning(json.loads(response.body.decode()))
-					#result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'esi_api.error':{'code':response.code,'data':json.loads(response.body.decode())}}})
-			
-
-			#--------------------------------------------------
-			url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/bookmarks/?token=' + esi_api['access_token']
-			chunk = { 'kwargs':{'method':'GET'} , 'url':url }
-			folder = 'bookmarks'
-			
-			response = yield self.fe.asyncFetch(chunk)
-			if response.code == 200:
-				logger.info(folder +'OK')
-				payload[folder]=json.loads(response.body.decode())
-				result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':payload})
-
-			else:
-				error = json.loads(response.body.decode())
-				logger.warning(error)
-				if 'sso_status' in error and error['sso_status']==401:
-					logger.warning('REFRESH TOKEN')
-					self.refreshSSO(esi_api)
-				else:
-					logger.warning(folder +'ERROR')
-					logger.warning(json.loads(response.body.decode()))
-					#result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'esi_api.error':{'code':response.code,'data':json.loads(response.body.decode())}}})
-
-
-			#--------------------------------------------------
-			url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/bookmarks/folders/?token=' + esi_api['access_token']
-			chunk = { 'kwargs':{'method':'GET'} , 'url':url }
-			folder = 'bookmarks_folders'
-			
-			response = yield self.fe.asyncFetch(chunk)
-			if response.code == 200:
-				logger.info(folder +'OK')
-				payload[folder]=json.loads(response.body.decode())
-				result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':payload})
-
-			else:
-				error = json.loads(response.body.decode())
-				logger.warning(error)
-				if 'sso_status' in error and error['sso_status']==401:
-					logger.warning('REFRESH TOKEN')
-					self.refreshSSO(esi_api)
-				else:
-					logger.warning(folder +'ERROR')
-					logger.warning(json.loads(response.body.decode()))
-					#result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'esi_api.error':{'code':response.code,'data':json.loads(response.body.decode())}}})
-					
-
-			#--------------------------------------------------
-			url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/wallet/journal/?token=' + esi_api['access_token']
-			chunk = { 'kwargs':{'method':'GET'} , 'url':url }
-			folder = 'wallet_journal'
-			
-			response = yield self.fe.asyncFetch(chunk)
-			if response.code == 200:
-				logger.info(folder +'OK')
-				payload[folder]=json.loads(response.body.decode())
-				result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':payload})
-
-			else:
-				error = json.loads(response.body.decode())
-				logger.warning(error)
-				if 'sso_status' in error and error['sso_status']==401:
-					logger.warning('REFRESH TOKEN')
-					self.refreshSSO(esi_api)
-				else:
-					logger.warning(folder +'ERROR')
-					logger.warning(json.loads(response.body.decode()))
-					#result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'esi_api.error':{'code':response.code,'data':json.loads(response.body.decode())}}})
-
-
-
-
-				# logger.warning('refresh_token:' + str(esi_api['CharacterID']))
-				# self.refreshSSO(esi_api)
-
-			# url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/ship/?token=' + esi_api['access_token']
-			# chunk = { 'kwargs':{'method':'GET'} , 'url':url }
-			
-			# response = yield self.fe.asyncFetch(chunk)
-			# if response.code == 200:
-			# 	payload.update(json.loads(response.body.decode()))
-			# else:
-			# 	logger.warning(response.code)
-			# 	logger.warning(response.body)
-			# 	# logger.warning('refresh_token:' + str(esi_api['CharacterID']))
-			# 	# self.refreshSSO(esi_api)
-
-			# url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/standings/?token=' + esi_api['access_token']
-			# chunk = { 'kwargs':{'method':'GET'} , 'url':url }
-			
-			# response = yield self.fe.asyncFetch(chunk)
-			# if response.code == 200:
-			# 	payload['standings']=json.loads(response.body.decode())
-			# else:
-
-			# 	logger.warning(response.code)
-			# 	logger.warning(response.body)
-			# 	result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'esi_api.error':{'code':response.code,'data':json.loads(response.body.decode())}}})
-
 	@gen.coroutine
 	def refreshSSO(self,oAuth=None):
 		
@@ -355,3 +233,161 @@ class CronWorker(object):
 
 		else :
 			logger.warning( str(response.code) +':' + str(response.body))
+
+	@gen.coroutine
+	def refresh_api(self):
+
+		cursor = self.db['pilots'].find({'esi_api':{'$exists':1}},{'esi_api':1,'public':1})
+		documentList = yield cursor.to_list(length=1000)
+		
+		for document in documentList:
+			#logger.warning('refresh_api:' + str(document['esi_api']['CharacterID']))
+			yield self.qe.refreshCharacter(document)
+
+
+	@gen.coroutine
+	def refresh_contracts(self):
+
+		cursor = self.db['contracts'].find({'items':{'$exists':0}})
+		documentList = yield cursor.to_list(length=1000)
+		
+		for document in documentList:
+			#logger.warning('refresh_contracts:' + str(document['_id']))
+			yield self.qe.refreshContract(document)
+
+	# @gen.coroutine
+	# def run(self):
+
+	# 	# for i in self.ws.waiters:
+	# 	# 	i.write_message({'clients':len(self.ws.waiters)})
+
+	# 	cursor = self.db['pilots'].find({'esi_api':{'$exists':1},'esi_api.error':{'$exists':0}},{'esi_api.CharacterID':1,'esi_api.access_token':1,'esi_api.refresh_token':1})
+	# 	documentList = yield cursor.to_list(length=10000)
+		
+	# 	for document in documentList:
+				
+	# 		esi_api = document['esi_api']
+	# 		payload = {}
+
+	# 		#--------------------------------------------------
+	# 		url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/location/?token=' + esi_api['access_token']
+	# 		chunk = { 'kwargs':{'method':'GET'} , 'url':url }
+	# 		folder = 'location'
+
+	# 		response = yield self.fe.asyncFetch(chunk)
+	# 		if response.code == 200:
+	# 			logger.info(folder +'OK')
+	# 			payload[folder]=json.loads(response.body.decode())
+	# 			result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':payload})
+
+	# 		else:
+	# 			error = json.loads(response.body.decode())
+	# 			logger.warning(error)
+	# 			if 'sso_status' in error and error['sso_status']==401:
+	# 				logger.warning('REFRESH TOKEN')
+	# 				self.refreshSSO(esi_api)
+	# 			else:
+	# 				logger.warning(folder +'ERROR')
+	# 				logger.warning(json.loads(response.body.decode()))
+	# 				#result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'esi_api.error':{'code':response.code,'data':json.loads(response.body.decode())}}})
+			
+
+	# 		#--------------------------------------------------
+	# 		url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/bookmarks/?token=' + esi_api['access_token']
+	# 		chunk = { 'kwargs':{'method':'GET'} , 'url':url }
+	# 		folder = 'bookmarks'
+			
+	# 		response = yield self.fe.asyncFetch(chunk)
+	# 		if response.code == 200:
+	# 			logger.info(folder +'OK')
+	# 			payload[folder]=json.loads(response.body.decode())
+	# 			result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':payload})
+
+	# 		else:
+	# 			error = json.loads(response.body.decode())
+	# 			logger.warning(error)
+	# 			if 'sso_status' in error and error['sso_status']==401:
+	# 				logger.warning('REFRESH TOKEN')
+	# 				self.refreshSSO(esi_api)
+	# 			else:
+	# 				logger.warning(folder +'ERROR')
+	# 				logger.warning(json.loads(response.body.decode()))
+	# 				#result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'esi_api.error':{'code':response.code,'data':json.loads(response.body.decode())}}})
+
+
+	# 		#--------------------------------------------------
+	# 		url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/bookmarks/folders/?token=' + esi_api['access_token']
+	# 		chunk = { 'kwargs':{'method':'GET'} , 'url':url }
+	# 		folder = 'bookmarks_folders'
+			
+	# 		response = yield self.fe.asyncFetch(chunk)
+	# 		if response.code == 200:
+	# 			logger.info(folder +'OK')
+	# 			payload[folder]=json.loads(response.body.decode())
+	# 			result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':payload})
+
+	# 		else:
+	# 			error = json.loads(response.body.decode())
+	# 			logger.warning(error)
+	# 			if 'sso_status' in error and error['sso_status']==401:
+	# 				logger.warning('REFRESH TOKEN')
+	# 				self.refreshSSO(esi_api)
+	# 			else:
+	# 				logger.warning(folder +'ERROR')
+	# 				logger.warning(json.loads(response.body.decode()))
+	# 				#result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'esi_api.error':{'code':response.code,'data':json.loads(response.body.decode())}}})
+					
+
+	# 		#--------------------------------------------------
+	# 		url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/wallet/journal/?token=' + esi_api['access_token']
+	# 		chunk = { 'kwargs':{'method':'GET'} , 'url':url }
+	# 		folder = 'wallet_journal'
+			
+	# 		response = yield self.fe.asyncFetch(chunk)
+	# 		if response.code == 200:
+	# 			logger.info(folder +'OK')
+	# 			payload[folder]=json.loads(response.body.decode())
+	# 			result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':payload})
+
+	# 		else:
+	# 			error = json.loads(response.body.decode())
+	# 			logger.warning(error)
+	# 			if 'sso_status' in error and error['sso_status']==401:
+	# 				logger.warning('REFRESH TOKEN')
+	# 				self.refreshSSO(esi_api)
+	# 			else:
+	# 				logger.warning(folder +'ERROR')
+	# 				logger.warning(json.loads(response.body.decode()))
+	# 				#result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'esi_api.error':{'code':response.code,'data':json.loads(response.body.decode())}}})
+
+
+
+
+	# 			# logger.warning('refresh_token:' + str(esi_api['CharacterID']))
+	# 			# self.refreshSSO(esi_api)
+
+	# 		# url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/ship/?token=' + esi_api['access_token']
+	# 		# chunk = { 'kwargs':{'method':'GET'} , 'url':url }
+			
+	# 		# response = yield self.fe.asyncFetch(chunk)
+	# 		# if response.code == 200:
+	# 		# 	payload.update(json.loads(response.body.decode()))
+	# 		# else:
+	# 		# 	logger.warning(response.code)
+	# 		# 	logger.warning(response.body)
+	# 		# 	# logger.warning('refresh_token:' + str(esi_api['CharacterID']))
+	# 		# 	# self.refreshSSO(esi_api)
+
+	# 		# url = 'https://esi.evetech.net/latest/characters/' + str(esi_api['CharacterID']) + '/standings/?token=' + esi_api['access_token']
+	# 		# chunk = { 'kwargs':{'method':'GET'} , 'url':url }
+			
+	# 		# response = yield self.fe.asyncFetch(chunk)
+	# 		# if response.code == 200:
+	# 		# 	payload['standings']=json.loads(response.body.decode())
+	# 		# else:
+
+	# 		# 	logger.warning(response.code)
+	# 		# 	logger.warning(response.body)
+	# 		# 	result = yield self.db.pilots.update_one({'esi_api.CharacterID':esi_api['CharacterID']},{'$set':{'esi_api.error':{'code':response.code,'data':json.loads(response.body.decode())}}})
+
+	

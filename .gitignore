@@ -4,3 +4,4 @@ test*
 *sublime-project*
 *sublime-workspace*
 .gitignore
+.DS_Store

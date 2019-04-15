@@ -163,7 +163,7 @@ class ContractHandler(web.RequestHandler):
 	def get(self):
 
 		collection = self.settings['db']['contracts']
-		cursor = collection.find({})
+		cursor = collection.find({'type':'item_exchange','status':'outstanding','for_corporation':True},{'_id':0,'issuer_corporation_id':1,'items':1,'date_expired':1,'title':1,'end_location_id':1})
 		document = yield cursor.to_list(length=1000)
 
 		self.write(json.dumps(document))

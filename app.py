@@ -20,7 +20,7 @@ class Application(web.Application):
 			(r"/esi/(.*)"		,socketHandler.SocketHandler , {},"wsi"),
 			(r"/market/(.*)"	,webHandler.MarketHandler),
 			(r"/tripwire"		,webHandler.TripwireHandler),
-			(r"/contract"		,webHandler.ContractHandler),
+			(r"/contracts"		,webHandler.ContractsHandler),
 			(r"/system/(.*)"	,webHandler.SystemHandler),
 			(r"/index.html"		,web.StaticFileHandler, {"path": "docs/index.html"}),
 			(r"/(.*)"			,web.StaticFileHandler, {"path": "docs/index.html"}),
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
 	#application
 	app = Application()
-
+				
 	#modules
 	db = MotorClient(config.mongodb['url'])[config.mongodb['db']]
 	fe = fetchHandler.AsyncFetchClient()
@@ -63,6 +63,10 @@ if __name__ == "__main__":
 	#cronWorker
 	cr.refresh_api()
 	cron = ioloop.PeriodicCallback(lambda : cr.refresh_api(),15*60*1000)
+	
+	cr.refresh_contracts()
+	cron = ioloop.PeriodicCallback(lambda : cr.refresh_contracts(),15*60*1000)
+
 	cron.start()
 
 	#queueWorker
