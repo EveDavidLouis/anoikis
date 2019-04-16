@@ -21,6 +21,7 @@ class Application(web.Application):
 			(r"/market/(.*)"	,webHandler.MarketHandler),
 			(r"/tripwire"		,webHandler.TripwireHandler),
 			(r"/contracts"		,webHandler.ContractsHandler),
+			(r"/fittings"		,webHandler.FittingsHandler),
 			(r"/system/(.*)"	,webHandler.SystemHandler),
 			(r"/index.html"		,web.StaticFileHandler, {"path": "docs/index.html"}),
 			(r"/(.*)"			,web.StaticFileHandler, {"path": "docs/index.html"}),
@@ -66,6 +67,9 @@ if __name__ == "__main__":
 	
 	cr.refresh_contracts()
 	cron = ioloop.PeriodicCallback(lambda : cr.refresh_contracts(),15*60*1000)
+
+	cr.refresh_fleetup()
+	cron = ioloop.PeriodicCallback(lambda : cr.refresh_fleetup(),15*60*1000)
 
 	cron.start()
 
