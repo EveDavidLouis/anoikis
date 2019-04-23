@@ -293,17 +293,21 @@ class CronWorker(object):
 		if response.code == 200:
 			doctrines = json.loads(response.body.decode())
 			if 'Data' in doctrines:	
-				for fitting in doctrines['Data']:
+				for doctrine in doctrines['Data']:
 					
 					headers2 = {}
-					url2 = 'http://api.fleet-up.com/Api.svc/antVcAvocC7H2fhkHhrdbHQ8N/76950/Wg6sDOS4xUo0UogPyFDn0PjR29JhbZ/DoctrineFittings/'+str(fitting['DoctrineId'])+'/true'
+					url2 = 'http://api.fleet-up.com/Api.svc/antVcAvocC7H2fhkHhrdbHQ8N/76950/Wg6sDOS4xUo0UogPyFDn0PjR29JhbZ/DoctrineFittings/'+str(doctrine['DoctrineId'])+'/true'
 					request2 = { 'kwargs':{'method':'GET','headers':headers2} , 'url':url2 }
 
 					response2 = yield self.fe.asyncFetch(request2)
 					if response2.code == 200:
-						fittingsItems = json.loads(response2.body.decode())['Data'][0]['FittingData']
-						fittingUpdate={'_id':int(fitting['DoctrineId']),'Name':fitting['Name'],'FolderName':fitting['FolderName'],'FittingData':fittingsItems}
-						self.db.fittings.update_one({'_id':fittingUpdate['_id']},{'$set':fittingUpdate},upsert=True)
+						
+						fittings = json.loads(response2.body.decode())['Data']
+
+						for fitting in fittings:
+					
+							fitting={'_id':int(fitting['FittingId']),'Name':fitting['Name'],'DoctrineId':int(doctrine['DoctrineId']),'DoctrineName':doctrine['Name'],'FolderName':doctrine['FolderName'],'FittingData':fitting['FittingData']}
+							self.db.fittings.update_one({'_id':fitting['_id']},{'$set':fitting},upsert=True)
 					else:
 						logger.info('refresh_fleetup-'+ str(fitting['DoctrineId']) + ':' + str(response.code))
 
