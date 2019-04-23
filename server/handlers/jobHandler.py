@@ -305,8 +305,17 @@ class CronWorker(object):
 						fittings = json.loads(response2.body.decode())['Data']
 
 						for fitting in fittings:
-					
+							
 							fitting={'_id':int(fitting['FittingId']),'Name':fitting['Name'],'DoctrineId':int(doctrine['DoctrineId']),'DoctrineName':doctrine['Name'],'FolderName':doctrine['FolderName'],'FittingData':fitting['FittingData']}
+
+							headers3 = {}
+							url3 = 'http://api.fleet-up.com/Api.svc/antVcAvocC7H2fhkHhrdbHQ8N/76950/Wg6sDOS4xUo0UogPyFDn0PjR29JhbZ/Fitting/'+str(fitting['_id'])+'/eft'
+							request3 = { 'kwargs':{'method':'GET','headers':headers3} , 'url':url3 }
+
+							response3 = yield self.fe.asyncFetch(request3)
+							if response3.code == 200:
+								fitting['EFT'] = json.loads(response3.body.decode())['Data']['FittingData']
+
 							self.db.fittings.update_one({'_id':fitting['_id']},{'$set':fitting},upsert=True)
 					else:
 						logger.info('refresh_fleetup-'+ str(fitting['DoctrineId']) + ':' + str(response.code))
