@@ -3,6 +3,7 @@ import logging
 import json
 
 logger = logging.getLogger('app')
+logging.basicConfig(level=logging.INFO)
 
 from tornado import ioloop , gen , web
 from motor.motor_tornado import MotorClient
@@ -69,7 +70,7 @@ if __name__ == "__main__":
 	cron = ioloop.PeriodicCallback(lambda : cr.refresh_contracts(),15*60*1000)
 
 	cr.refresh_fleetup()
-	cron = ioloop.PeriodicCallback(lambda : cr.refresh_fleetup(),15*60*1000)
+	cron = ioloop.PeriodicCallback(lambda : cr.refresh_fleetup(),24*60*60*1000)
 
 	cron.start()
 

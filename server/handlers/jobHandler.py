@@ -4,7 +4,7 @@ from tornado.queues import Queue
 import urllib
 
 import logging
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('cron')
 
 class QueueWorker():
@@ -89,7 +89,7 @@ class QueueWorker():
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
 
-				# headers = {'folder':'public'}
+				headers = {'folder':'public'}
 				url = 'https://esi.evetech.net/latest/characters/' + str(char['esi_api']['CharacterID']) + '/?token=' + char['esi_api']['access_token']
 				chunk = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 				requests.append(chunk)
@@ -154,8 +154,9 @@ class QueueWorker():
 
 						else:
 							result[response.request.headers['folder']] = json.loads(response.body.decode())
-						#if response.request.headers['folder'] == 'location':
-						#	logger.warning(json.loads(response.body.decode()))
+						
+						#if response.request.headers['folder'] == 'location':logger.warning(json.loads(response.body.decode()))
+					
 					elif response.code == 503:
 						return None
 					else:

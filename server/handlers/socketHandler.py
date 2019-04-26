@@ -106,7 +106,11 @@ class SocketHandler(websocket.WebSocketHandler):
 
 				yield db.pilots.update_one({'_id':result['CharacterID']},{'$set':{'esi_api':result,'owner':self.CharacterID}},upsert=True)
 				
-				qe.refreshCharacter(result)
+				cursor = db['pilots'].find({'_id':result['CharacterID'],'esi_api':{'$exists':1} },{'esi_api':1,'public':1})
+				documentList = yield cursor.to_list(length=1000)
+		
+				for document in documentList:
+					yield qe.refreshCharacter(document)
 
 				outbound={'endPoint':'esi-api','data':{'CharacterID':result['CharacterID'],'CharacterName':result['CharacterName']}}
 				self.write_message(json.dumps(outbound))
