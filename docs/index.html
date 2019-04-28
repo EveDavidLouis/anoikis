@@ -1,145 +1,146 @@
 <!doctype html>
 <html lang="en">
 
-	<head>
-		
-		<title>ESI-ONLINE</title>
-		<link rel="shortcut icon" href="https://www.eveonline.com/favicon.ico">
+<head>
 
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-		<meta name="google-site-verification" content="ArrI6iNJEw0IZovgZPi4HEOLI1OhZQVbXHE5WYFNhK0" />
-		<link rel="stylesheet" href="https://necolas.github.io/normalize.css/latest/normalize.css">
-		<link rel="stylesheet" href="https://bootswatch.com/4/lux/bootstrap.min.css">
-		<link rel="stylesheet" href="styles/styles.css">
+	<title>ESI-ONLINE</title>
+	<link rel="shortcut icon" href="https://www.eveonline.com/favicon.ico">
 
-	</head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<meta name="google-site-verification" content="ArrI6iNJEw0IZovgZPi4HEOLI1OhZQVbXHE5WYFNhK0" />
+	<link rel="stylesheet" href="https://necolas.github.io/normalize.css/latest/normalize.css">
+	<link rel="stylesheet" href="https://bootswatch.com/4/lux/bootstrap.min.css">
+	<link rel="stylesheet" href="styles/styles.css">
 
-	<body>
+</head>
 
-		<div class="loader">
-			<div class="wheel">
-			</div>
+<body>
+
+	<div class="loader">
+		<div class="wheel">
 		</div>
-	
-		<div id="app">
+	</div>
 
-			<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+	<div id="app">
 
-				<a class="navbar-brand" id="brand" href="#">ESI-OFFLINE</a>
-				
-				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
-					<span class="navbar-toggler-icon"></span>
-				</button>
-				
-				<div v-if="endpoint!=='welcome'" class="collapse navbar-collapse" id="navbar">
-					
-<!-- 					<form class="form-inline my-2 my-lg-0">
-						<input class="form-control mr-sm-2" type="search" placeholder="coming soon...." aria-label="Search">
-						<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-					</form> -->
+		<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+			<a class="navbar-brand" href="#">Navbar</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+			</button>
 
-					<ul class="navbar-nav mr-auto">
+			<div v-if="endpoint!=='welcome'" class="collapse navbar-collapse" id="navbarSupportedContent">
 
-						<li class="nav-item">		
-						</li>
+				<ul class="navbar-nav ml-auto">
+					<li class="nav-item">
+						<button class="btn btn-outline-info my-2 my-sm-0" type="submit" onclick="getCharacters('owner')">Characters</button>
+					</li>
+					<li class="nav-item">
+						<button class="btn btn-outline-warning my-2 my-sm-0" type="submit" onclick="logout()">Logout</button>
+					</li>
+				</ul>
 
-					</ul>
-					
-					<ul class="navbar-nav ml-auto">
-						<li class="nav-item">
-							<button class="btn btn-outline-info my-2 my-sm-0" type="submit" onclick="getCharacters('owner')">Characters</button>
-						</li>
-						<li class="nav-item">
-							<button class="btn btn-outline-warning my-2 my-sm-0" type="submit" onclick="logout()">Logout</button>
-						</li>
-
-					</ul>
-
-				</div>
-
-			</nav>
-
-			<main class="main-container">
-
-				<div v-if="endpoint === 'welcome'" class="container welcome-container" v-html="welcome">
-				</div>
-
-				<div v-if="endpoint === 'home'" class="container welcome-container">
-				</div>
-
-				<div v-if="endpoint === 'characters'" class="container characters-container">
-					
-					<div class = "row" >
-						<miniportrait v-for="character in characters.list" :data="character" :key="character.CharacterID"> 
-						</miniportrait> 
+				<!-- <ul class="navbar-nav mr-auto">
+					<li class="nav-item active">
+						<a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#">Link</a>
+					</li>
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Dropdown</a>
+						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+						<a class="dropdown-item" href="#">Action</a>
+						<a class="dropdown-item" href="#">Another action</a>
+						<div class="dropdown-divider"></div>
+						<a class="dropdown-item" href="#">Something else here</a>
 					</div>
+					</li>
+					<li class="nav-item">
+					<a class="nav-link disabled" href="#">Disabled</a>
+					</li>
+				</ul>
+				<form class="form-inline my-2 my-lg-0">
+					<input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+					<button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+				</form> -->
+			</div>
+		</nav>
 
-					<div class = "row">
-						<div class = "col-ld"> 
-							<a class="btn icon-btn btn-success" :href="characters.url">
-								<span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span>Add Character
-							</a>
-						</div>
-					</div>
-					
+		<main class="main-container">
 
+			<div v-if="endpoint === 'welcome'" class="container welcome-container" v-html="welcome">
+			</div>
 
+			<div v-if="endpoint === 'home'" class="container welcome-container">
+			</div>
+
+			<div v-if="endpoint === 'characters'" class="container characters-container">
+				<div class = "row" >
+					<miniportrait v-for="character in characters.list" :data="character" :key="character.CharacterID"> </miniportrait> 
 				</div>
-				<div v-if="endpoint === 'character'" class="container">
-
-					<ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-						<li class="nav-item">
-							<a class="nav-link active" id="home-tab" data-toggle="pill" href="#home" role="tab" aria-controls="home" aria-selected="true">Home</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" id="bookmarks-tab" data-toggle="pill" href="#bookmarks" role="tab" aria-controls="profile" aria-selected="false">Bookmarks</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" id="wallet-tab" data-toggle="pill" href="#wallet" role="tab" aria-controls="contact" aria-selected="false">Wallet</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" id="transactions-tab" data-toggle="pill" href="#transactions" role="tab" aria-controls="contact" aria-selected="false">Transactions</a>
-						</li>
-											<li class="nav-item">
-							<a class="nav-link" id="stats-tab" data-toggle="pill" href="#stats" role="tab" aria-controls="contact" aria-selected="false">Stats</a>
-						</li>
-					</ul>
-
-					<div class="tab-content" id="myTabContent">
-						<div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-							<general :data="character"></general>
-						</div>
-						<div class="tab-pane fade" id="bookmarks" role="tabpanel" aria-labelledby="bookmarks-tab">
-							<bookmarks :data="character"></bookmarks>
-						</div>
-						<div class="tab-pane fade" id="wallet" role="tabpanel" aria-labelledby="wallet-tab">
-							<wallet :data="character"></wallet>
-						</div>
-						<div class="tab-pane fade" id="transactions" role="tabpanel" aria-labelledby="transactions-tab">
-							<transactions :data="character"></transactions>
-						</div>
-						<div class="tab-pane fade" id="stats" role="tabpanel" aria-labelledby="stats-tab">
-							<stats :data="character"></stats>
-						</div>
+				<div class = "row">
+					<div class = "col-ld"> 
+						<a class="btn icon-btn btn-success" :href="characters.url">
+						<span class="glyphicon btn-glyphicon glyphicon-plus img-circle text-success"></span>Add Character
+						</a>
 					</div>
+				</div>
+			</div>
 
+			<div v-if="endpoint === 'character'" class="container">
+
+				<ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+					<li class="nav-item">
+						<a class="nav-link active" id="home-tab" data-toggle="pill" href="#home" role="tab" aria-controls="home" aria-selected="true">Home</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" id="bookmarks-tab" data-toggle="pill" href="#bookmarks" role="tab" aria-controls="profile" aria-selected="false">Bookmarks</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" id="wallet-tab" data-toggle="pill" href="#wallet" role="tab" aria-controls="contact" aria-selected="false">Wallet</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" id="transactions-tab" data-toggle="pill" href="#transactions" role="tab" aria-controls="contact" aria-selected="false">Transactions</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" id="stats-tab" data-toggle="pill" href="#stats" role="tab" aria-controls="contact" aria-selected="false">Stats</a>
+					</li>
+				</ul>
+
+				<div class="tab-content" id="myTabContent">
+					<div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+						<general :data="character"></general>
+					</div>
+					<div class="tab-pane fade" id="bookmarks" role="tabpanel" aria-labelledby="bookmarks-tab">
+						<bookmarks :data="character"></bookmarks>
+					</div>
+					<div class="tab-pane fade" id="wallet" role="tabpanel" aria-labelledby="wallet-tab">
+						<wallet :data="character"></wallet>
+					</div>
+					<div class="tab-pane fade" id="transactions" role="tabpanel" aria-labelledby="transactions-tab">
+						<transactions :data="character"></transactions>
+					</div>
+					<div class="tab-pane fade" id="stats" role="tabpanel" aria-labelledby="stats-tab">
+						<stats :data="character"></stats>
+					</div>
 				</div>
 
 			</div>
-		</div>
 
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
-		
-		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-		<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-		
-		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		</main>
 
-		<script type="text/javascript" src="scripts/ui.js"></script>
-		<script type="text/javascript" src="scripts/script.js"></script>
+	</div>
 
-	</body>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+	<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script type="text/javascript" src="scripts/ui.js"></script>
+	<script type="text/javascript" src="scripts/script.js"></script>
+
+</body>
 
 </html>
