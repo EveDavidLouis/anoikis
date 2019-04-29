@@ -193,28 +193,6 @@ class QueueWorker():
 				logger.info(response.request.headers['contract_id'] + '->' + str(response.code) + ':' + response.body.decode())
 
 
-	@gen.coroutine
-	def refresh_fleetup(self,fitting=None):
-
-		headers = {}
-		request = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
-
-		response = yield self.fe.asyncFetch(request)
-
-		if response.code == 200:
-			doctrines = json.loads(response.body.decode())
-			if 'Data' in doctrines:	
-				for doctrine in doctrines['Data']:
-					doctrineUpdate={'_id':int(doctrine['DoctrineId']),'Name':doctrine['Name'],'FolderName':doctrine['FolderName']}
-					self.db.doctrines.update_one({'_id':doctrineUpdate['_id']},{'$set':doctrineUpdate},upsert=True)
-
-			else:
-				logger.warning(doctrines)
-				
-		else:
-			logger.info('refresh_fleetup:' + str(response.code))
-
-
 class CronWorker(object):
 	
 	def __init__(self,db=None,fe=None,ws=None,co=None,qe=None):
@@ -307,7 +285,7 @@ class CronWorker(object):
 
 						for fitting in fittings:
 							
-							fitting={'_id':int(fitting['FittingId']),'Name':fitting['Name'],'DoctrineId':int(doctrine['DoctrineId']),'DoctrineName':doctrine['Name'],'FolderName':doctrine['FolderName'],'FittingData':fitting['FittingData']}
+							fitting={'_id':int(fitting['FittingId']),'FittingId':fitting['FittingId'],'Name':fitting['Name'],'DoctrineId':int(doctrine['DoctrineId']),'DoctrineName':doctrine['Name'],'FolderName':doctrine['FolderName'],'FittingData':fitting['FittingData']}
 
 							headers3 = {}
 							url3 = 'http://api.fleet-up.com/Api.svc/antVcAvocC7H2fhkHhrdbHQ8N/76950/Wg6sDOS4xUo0UogPyFDn0PjR29JhbZ/Fitting/'+str(fitting['_id'])+'/eft'

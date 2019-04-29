@@ -174,7 +174,7 @@ class FittingsHandler(web.RequestHandler):
 	def get(self):
 
 		collection = self.settings['db']['fittings']
-		cursor = collection.find({},{})
+		cursor = collection.find({},{'_id':0})
 		document = yield cursor.to_list(length=1000)
 
 		self.write(json.dumps(document))
