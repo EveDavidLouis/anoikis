@@ -22,7 +22,7 @@ class Application(web.Application):
 			(r"/market/(.*)"	,webHandler.MarketHandler),
 			(r"/tripwire"		,webHandler.TripwireHandler),
 			(r"/contracts"		,webHandler.ContractsHandler),
-			(r"/fittings"		,webHandler.FittingsHandler),
+			(r"/fleetup/(.*)"	,webHandler.FleetupHandler),
 			(r"/system/(.*)"	,webHandler.SystemHandler),
 			(r"/index.html"		,web.StaticFileHandler, {"path": "docs/index.html"}),
 			(r"/(.*)"			,web.StaticFileHandler, {"path": "docs/index.html"}),

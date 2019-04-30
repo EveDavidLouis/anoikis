@@ -169,12 +169,12 @@ class ContractsHandler(web.RequestHandler):
 		self.write(json.dumps(document))
 		self.finish()	
 
-class FittingsHandler(web.RequestHandler):
+class FleetupHandler(web.RequestHandler):
 	@gen.coroutine
-	def get(self):
+	def get(self,args):
 
 		collection = self.settings['db']['fittings']
-		cursor = collection.find({},{'_id':0})
+		cursor = collection.find({'ApiCode':args},{'_id':0,'ApiCode':0})
 		document = yield cursor.to_list(length=1000)
 
 		self.write(json.dumps(document))

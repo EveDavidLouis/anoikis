@@ -263,8 +263,12 @@ class CronWorker(object):
 
 		logger.info('CronWorker.refresh_fleetup')
 
+		AppKey = 'antVcAvocC7H2fhkHhrdbHQ8N'
+		ApiCode = 'Wg6sDOS4xUo0UogPyFDn0PjR29JhbZ'
+		Group = '76950'
+
 		headers = {}
-		url='http://api.fleet-up.com/Api.svc/antVcAvocC7H2fhkHhrdbHQ8N/76950/Wg6sDOS4xUo0UogPyFDn0PjR29JhbZ/Doctrines/42272'
+		url='http://api.fleet-up.com/Api.svc/'+AppKey+'/'+Group+'/'+ApiCode+'/Doctrines/42272'
 		request = { 'kwargs':{'method':'GET','headers':headers} , 'url':url }
 
 		response = yield self.fe.asyncFetch(request)
@@ -275,7 +279,7 @@ class CronWorker(object):
 				for doctrine in doctrines['Data']:
 					
 					headers2 = {}
-					url2 = 'http://api.fleet-up.com/Api.svc/antVcAvocC7H2fhkHhrdbHQ8N/76950/Wg6sDOS4xUo0UogPyFDn0PjR29JhbZ/DoctrineFittings/'+str(doctrine['DoctrineId'])+'/true'
+					url2 = 'http://api.fleet-up.com/Api.svc/'+AppKey+'/'+Group+'/'+ApiCode+'/DoctrineFittings/'+str(doctrine['DoctrineId'])+'/true'
 					request2 = { 'kwargs':{'method':'GET','headers':headers2} , 'url':url2 }
 
 					response2 = yield self.fe.asyncFetch(request2)
@@ -288,11 +292,12 @@ class CronWorker(object):
 							fitting={'_id':int(fitting['FittingId']),'FittingId':fitting['FittingId'],'Name':fitting['Name'],'DoctrineId':int(doctrine['DoctrineId']),'DoctrineName':doctrine['Name'],'FolderName':doctrine['FolderName'],'FittingData':fitting['FittingData']}
 
 							headers3 = {}
-							url3 = 'http://api.fleet-up.com/Api.svc/antVcAvocC7H2fhkHhrdbHQ8N/76950/Wg6sDOS4xUo0UogPyFDn0PjR29JhbZ/Fitting/'+str(fitting['_id'])+'/eft'
+							url3 = 'http://api.fleet-up.com/Api.svc/'+AppKey+'/'+Group+'/'+ApiCode+'/Fitting/'+str(fitting['_id'])+'/eft'
 							request3 = { 'kwargs':{'method':'GET','headers':headers3} , 'url':url3 }
 
 							response3 = yield self.fe.asyncFetch(request3)
 							if response3.code == 200:
+								fitting['ApiCode'] = ApiCode
 								fitting['EFT'] = json.loads(response3.body.decode())['Data']['FittingData']
 
 							self.db.fittings.update_one({'_id':fitting['_id']},{'$set':fitting},upsert=True)
