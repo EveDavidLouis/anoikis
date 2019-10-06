@@ -273,7 +273,7 @@ class CronWorker(object):
 
 		response = yield self.fe.asyncFetch(request)
 
-		if response.code == 200:
+		if response.code == 200:	
 			doctrines = json.loads(response.body.decode())
 			if 'Data' in doctrines:	
 				for doctrine in doctrines['Data']:
@@ -304,9 +304,15 @@ class CronWorker(object):
 					else:
 						logger.info('refresh_fleetup-'+ str(fitting['DoctrineId']) + ':' + str(response.code))
 
+				logger.info('CronWorker.fleetup_UPDATED')
+
 			else:
 				logger.warning(doctrines)
 				
 		else:
 			logger.info('refresh_fleetup:' + str(response.code))
+
+
+
+
 	

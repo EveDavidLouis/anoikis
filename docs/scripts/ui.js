@@ -12,7 +12,7 @@ var app = new Vue({
 // MINI PORTAIT
 //++++++++++++++++++++
 Vue.component('miniportrait', {
-	props: ['data'],
+	props: {'data'},
 	template: `
 		<div class="col-lg-2 p-2">
 			<a :href="portraitHref">

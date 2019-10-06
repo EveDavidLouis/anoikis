@@ -219,3 +219,54 @@ class SocketHandler(websocket.WebSocketHandler):
 
 				payload.update(json.loads(response.body.decode()))
 				return payload
+
+
+class SocketHandler2(websocket.WebSocketHandler):
+	
+	waiters = set()
+	cache = []
+	cache_size = 200
+
+	@gen.coroutine
+	def check_origin(self, origin):
+		return True
+
+	@gen.coroutine
+	def cron(self):
+		outbound = {'ping':1}
+		self.write_message(json.dumps(outbound))
+
+	@gen.coroutine
+	def open(self,channel=''):
+		
+		db = self.settings['db']
+
+		self.id = uuid.uuid4()
+
+		SocketHandler.waiters.add(self)
+
+		self.token = channel
+
+		outbound = {'endPoint':'welcome','data':'no data' }
+
+		self.write_message(json.dumps(outbound))
+
+	@gen.coroutine
+	def on_close(self):
+
+		SocketHandler.waiters.remove(self)
+
+	@gen.coroutine
+	def on_message(self,inbound={}):
+
+		inbound = json.loads(inbound)
+		#logger.warning(inbound)
+
+		if 'getWelcome' in inbound:
+			outbound = {'endPoint':'welcome','data':'welcome data' }
+		elif 'getHome' in inbound:
+			outbound = {'endPoint':'home','data':'home data' }
+		else:
+			outbound = inbound
+
+		self.write_message(json.dumps(outbound))

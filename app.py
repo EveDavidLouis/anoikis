@@ -19,6 +19,7 @@ class Application(web.Application):
 			(r"/styles/(.*)"	,web.StaticFileHandler, {"path": "docs/styles"}),
 			(r"/scripts/(.*)"	,web.StaticFileHandler, {"path": "docs/scripts"}),	
 			(r"/esi/(.*)"		,socketHandler.SocketHandler , {},"wsi"),
+			(r"/api/(.*)"		,socketHandler.SocketHandler2 , {},"api"),
 			(r"/market/(.*)"	,webHandler.MarketHandler),
 			(r"/tripwire"		,webHandler.TripwireHandler),
 			(r"/contracts"		,webHandler.ContractsHandler),
@@ -63,14 +64,14 @@ if __name__ == "__main__":
 	app.listen(config.server['port'],config.server['host'])
 	
 	#cronWorker
-	cr.refresh_api()
-	cron = ioloop.PeriodicCallback(lambda : cr.refresh_api(),15*60*1000)
+	#cr.refresh_api()
+	#cron = ioloop.PeriodicCallback(lambda : cr.refresh_api(),15*60*1000)
 	
-	cr.refresh_contracts()
-	cron = ioloop.PeriodicCallback(lambda : cr.refresh_contracts(),15*60*1000)
-
+	#cr.refresh_contracts()
+	#cron = ioloop.PeriodicCallback(lambda : cr.refresh_contracts(),1*60*60*1000)
+	
 	cr.refresh_fleetup()
-	cron = ioloop.PeriodicCallback(lambda : cr.refresh_fleetup(),24*60*60*1000)
+	cron = ioloop.PeriodicCallback(lambda : cr.refresh_fleetup(),1*60*60*1000)
 
 	cron.start()
 
