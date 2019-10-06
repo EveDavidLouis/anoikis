@@ -261,7 +261,7 @@ class CronWorker(object):
 	@gen.coroutine
 	def refresh_fleetup(self):
 
-		logger.info('CronWorker.refresh_fleetup')
+		logger.info('CronWorker.refresh_fleetup_START')
 
 		AppKey = 'antVcAvocC7H2fhkHhrdbHQ8N'
 		ApiCode = 'Wg6sDOS4xUo0UogPyFDn0PjR29JhbZ'
@@ -304,7 +304,7 @@ class CronWorker(object):
 					else:
 						logger.info('refresh_fleetup-'+ str(fitting['DoctrineId']) + ':' + str(response.code))
 
-				logger.info('CronWorker.fleetup_UPDATED')
+				logger.info('CronWorker.refresh_fleetup_DONE')
 
 			else:
 				logger.warning(doctrines)
